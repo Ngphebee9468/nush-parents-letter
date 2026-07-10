@@ -80,14 +80,17 @@ async function readPdfText(file: File) {
 export async function parseDirectory(file: File, sessionId: string, prefixes = { tel6: "6516", tel1: "6601" }) {
   const lower = file.name.toLowerCase();
   if (lower.endsWith(".csv")) {
-    return parseDirectoryRows(csvRows(await file.text()), sessionId, "CSV", prefixes);
+    const rows = csvMatrix(await file.text());
+    const staff = parseDirectoryMatrix(rows, sessionId, "CSV", prefixes);
+    if (!staff.length) throw new Error("Could not identify required columns. Please check the directory format.");
+    return staff;
   }
   const XLSX = await import("xlsx");
   const workbook = XLSX.read(await file.arrayBuffer(), { type: "array" });
   const staff: StaffRecord[] = [];
   for (const sheetName of workbook.SheetNames) {
-    const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(workbook.Sheets[sheetName], { defval: "" });
-    staff.push(...parseDirectoryRows(rows, sessionId, sheetName, prefixes));
+    const rows = XLSX.utils.sheet_to_json<string[]>(workbook.Sheets[sheetName], { header: 1, defval: "", blankrows: false });
+    staff.push(...parseDirectoryMatrix(rows, sessionId, sheetName, prefixes));
   }
   if (!staff.length) {
     throw new Error("Could not identify required columns. Please check the directory format.");
@@ -134,13 +137,71 @@ function parseDirectoryRows(
     .filter((row): row is StaffRecord => Boolean(row));
 }
 
-function csvRows(text: string) {
-  const lines = text.split(/\r?\n/).filter(Boolean);
-  const headers = splitCsvLine(lines[0] ?? "");
-  return lines.slice(1).map((line) => {
-    const cells = splitCsvLine(line);
-    return Object.fromEntries(headers.map((header, index) => [header, cells[index] ?? ""]));
-  });
+export function parseDirectoryMatrix(
+  matrix: unknown[][],
+  sessionId: string,
+  worksheetName: string,
+  prefixes: { tel6: string; tel1: string },
+) {
+  const rows = matrix
+    .map((row) => row.map((cell) => String(cell ?? "").trim()))
+    .filter((row) => row.some(Boolean));
+  const headerIndex = rows.findIndex((row) => row.some((cell) => /email|e-mail|mail|account|user|login/i.test(cell)));
+  if (headerIndex >= 0) {
+    const headers = rows[headerIndex];
+    const keyedRows = rows.slice(headerIndex + 1).map((row) =>
+      Object.fromEntries(headers.map((header, index) => [header || `Column ${index + 1}`, row[index] ?? ""])),
+    );
+    const parsed = parseDirectoryRows(keyedRows, sessionId, worksheetName, prefixes);
+    if (parsed.length) return parsed;
+  }
+
+  return rows
+    .map((row, index) => parseDirectoryLooseRow(row, index, sessionId, worksheetName, prefixes))
+    .filter((row): row is StaffRecord => Boolean(row));
+}
+
+function parseDirectoryLooseRow(
+  row: string[],
+  index: number,
+  sessionId: string,
+  worksheetName: string,
+  prefixes: { tel6: string; tel1: string },
+): StaffRecord | null {
+  const emailCell = row.find((cell) => /[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i.test(cell)) ?? "";
+  const usernameCell = row.find((cell) => /^(?:nhs|nush)[a-z]{1,6}$/i.test(cell)) ?? "";
+  const initialsCell = row.find((cell) => /^[A-Z]{2,4}$/.test(cell)) ?? "";
+  const extensionCell = row.find((cell) => {
+    const digits = cell.replace(/\D/g, "");
+    return digits.length >= 4 && digits.length <= 8 && !/20\d{2}/.test(digits);
+  }) ?? "";
+  const nameCell = row.find((cell) =>
+    /^(?:mr|ms|mrs|mdm|dr)\b/i.test(cell) || (/^[A-Z][a-z]+(?:\s+[A-Z][a-z]+)+/.test(cell) && !cell.includes("@")),
+  ) ?? "";
+  const email = cleanEmail(emailCell || (usernameCell ? `${usernameCell}@nus.edu.sg` : ""));
+  const initials = normaliseInitials(initialsCell) || initialsFromEmailUsername(email || usernameCell);
+  const phone = normaliseTelephone(extensionCell, prefixes.tel6, prefixes.tel1);
+
+  if (!email && !initials && !nameCell) return null;
+  return {
+    id: crypto.randomUUID?.() ?? `staff-loose-${index}`,
+    session_id: sessionId,
+    full_name: nameCell || initials,
+    initials_raw: initialsCell || initials,
+    initials_normalised: initials,
+    department: "",
+    extension_raw: extensionCell,
+    full_telephone: phone.full_telephone,
+    telephone_review_required: phone.telephone_review_required,
+    email,
+    email_username: emailUsername(email),
+    worksheet_name: worksheetName,
+    source_row: index + 1,
+  };
+}
+
+function csvMatrix(text: string) {
+  return text.split(/\r?\n/).filter(Boolean).map(splitCsvLine);
 }
 
 function splitCsvLine(line: string) {

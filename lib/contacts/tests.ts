@@ -1,6 +1,7 @@
 import { buildMatches } from "./matching";
 import { initialsFromEmailUsername, normaliseInitials, normaliseTelephone } from "./normalise";
 import { demoData } from "./demo";
+import { parseDirectoryMatrix } from "./parse";
 
 export function runRegressionChecks() {
   const phoneCases: [string, string, boolean][] = [
@@ -45,5 +46,18 @@ export function runRegressionChecks() {
   )[0];
   if (emailOnly.status !== "confirmed_exact" || emailOnly.match_method !== "exact_initials") {
     throw new Error("nhsbww email-derived matching regression failed");
+  }
+
+  const looseDirectory = parseDirectoryMatrix(
+    [
+      ["Updated Staff Phone List", "", ""],
+      ["Ms Bee Wan Wen", "nhsbww", "68533"],
+    ],
+    demo.session.id,
+    "Loose",
+    { tel6: "6516", tel1: "6601" },
+  );
+  if (looseDirectory[0]?.initials_normalised !== "BWW" || looseDirectory[0]?.full_telephone !== "6516 8533") {
+    throw new Error("Loose staff directory parsing regression failed");
   }
 }
