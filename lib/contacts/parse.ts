@@ -1,4 +1,4 @@
-import { cleanEmail, emailUsername, normaliseInitials, normaliseTelephone, subjectDisplay } from "./normalise";
+import { cleanEmail, emailUsername, initialsFromEmailUsername, normaliseInitials, normaliseTelephone, subjectDisplay } from "./normalise";
 import type { StaffRecord, TimetableRecord } from "./types";
 
 const venuePattern = /^(?:[A-Z]\d-\d+|LT\d+|THEATRETTE|LAB|ROOM|HALL)$/i;
@@ -109,9 +109,9 @@ function parseDirectoryRows(
       };
       const fullName = get([/name/i, /staff/i, /teacher/i]);
       const initialsRaw = get([/initial/i, /code/i]);
-      const email = cleanEmail(get([/email/i, /e-mail/i]));
+      const email = cleanEmail(get([/email/i, /e-mail/i, /mail/i, /account/i, /user/i, /login/i]));
       const extension = get([/ext/i, /tel/i, /phone/i, /contact/i]);
-      const initials = normaliseInitials(initialsRaw || emailUsername(email).replace(/^nhs/, ""));
+      const initials = normaliseInitials(initialsRaw) || initialsFromEmailUsername(email);
       const phone = normaliseTelephone(extension, prefixes.tel6, prefixes.tel1);
 
       if (!fullName && !initials && !email) return null;

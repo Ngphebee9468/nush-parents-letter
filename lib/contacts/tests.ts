@@ -1,5 +1,5 @@
 import { buildMatches } from "./matching";
-import { normaliseInitials, normaliseTelephone } from "./normalise";
+import { initialsFromEmailUsername, normaliseInitials, normaliseTelephone } from "./normalise";
 import { demoData } from "./demo";
 
 export function runRegressionChecks() {
@@ -23,6 +23,9 @@ export function runRegressionChecks() {
   if (normaliseInitials("L.C.S.") !== "LCS" || normaliseInitials(" noh ") !== "NOH") {
     throw new Error("Initials normalisation failed");
   }
+  if (initialsFromEmailUsername("nhsbww@nus.edu.sg") !== "BWW" || initialsFromEmailUsername("nhslcs") !== "LCS") {
+    throw new Error("Email username initials derivation failed");
+  }
 
   const demo = demoData();
   const matches = buildMatches(demo.session.id, demo.timetable, demo.staff);
@@ -33,5 +36,14 @@ export function runRegressionChecks() {
   }
   if (ambiguous?.status !== "multiple_possible" || ambiguous.staff_record_id !== null) {
     throw new Error("Ambiguous D matching regression failed");
+  }
+
+  const emailOnly = buildMatches(
+    demo.session.id,
+    [{ ...demo.timetable[0], id: "email-derived-timetable", teacher_initials_raw: "BWW", teacher_initials_normalised: "BWW" }],
+    [{ ...demo.staff[0], id: "email-derived-staff", initials_raw: "", initials_normalised: "", email: "nhsbww@nus.edu.sg", email_username: "nhsbww" }],
+  )[0];
+  if (emailOnly.status !== "confirmed_exact" || emailOnly.match_method !== "exact_initials") {
+    throw new Error("nhsbww email-derived matching regression failed");
   }
 }

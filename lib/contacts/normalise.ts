@@ -13,6 +13,11 @@ export function emailUsername(email: string) {
   return cleanEmail(email).split("@")[0] ?? "";
 }
 
+export function initialsFromEmailUsername(value: string | null | undefined) {
+  const username = emailUsername(String(value ?? "").includes("@") ? String(value ?? "") : `${value ?? ""}@example.invalid`);
+  return normaliseInitials(username.replace(/^(nhs|nush|sst|staff|teacher)/i, ""));
+}
+
 export function normaliseTelephone(
   value: string | number | null | undefined,
   prefix6 = "6516",

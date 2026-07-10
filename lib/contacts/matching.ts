@@ -1,4 +1,4 @@
-import { emailUsername, nameDerivedInitials, normaliseInitials } from "./normalise";
+import { emailUsername, initialsFromEmailUsername, nameDerivedInitials, normaliseInitials } from "./normalise";
 import type { MatchRecord, StaffRecord, TimetableRecord } from "./types";
 
 function levenshtein(a: string, b: string) {
@@ -19,7 +19,7 @@ function levenshtein(a: string, b: string) {
 export function buildMatches(sessionId: string, timetable: TimetableRecord[], staff: StaffRecord[]) {
   return timetable.map((record, index): MatchRecord => {
     const initials = normaliseInitials(record.teacher_initials_normalised || record.teacher_initials_raw);
-    const exact = staff.filter((person) => person.initials_normalised === initials);
+    const exact = staff.filter((person) => staffInitials(person).includes(initials));
     const singleLetter = initials.length === 1;
 
     if (exact.length === 1 && (!singleLetter || staff.filter((person) => person.initials_normalised === initials).length === 1)) {
@@ -45,7 +45,7 @@ export function buildMatches(sessionId: string, timetable: TimetableRecord[], st
       });
     }
 
-    const emailMatch = staff.find((person) => emailUsername(person.email).endsWith(initials.toLowerCase()));
+    const emailMatch = staff.find((person) => initialsFromEmailUsername(person.email) === initials || emailUsername(person.email).endsWith(initials.toLowerCase()));
     if (emailMatch) {
       return base(record, sessionId, index, {
         staff_record_id: emailMatch.id,
@@ -68,7 +68,7 @@ export function buildMatches(sessionId: string, timetable: TimetableRecord[], st
     const fuzzy = staff
       .map((person) => ({
         staff_record_id: person.id,
-        score: levenshtein(initials, person.initials_normalised) <= 1 ? 0.6 : 0,
+        score: staffInitials(person).some((candidate) => levenshtein(initials, candidate) <= 1) ? 0.6 : 0,
         reason: "Fuzzy initials suggestion",
       }))
       .filter((candidate) => candidate.score > 0)
@@ -82,6 +82,15 @@ export function buildMatches(sessionId: string, timetable: TimetableRecord[], st
       possible_matches: fuzzy,
     });
   });
+}
+
+function staffInitials(person: StaffRecord) {
+  return Array.from(
+    new Set(
+      [person.initials_normalised, normaliseInitials(person.initials_raw), initialsFromEmailUsername(person.email)]
+        .filter(Boolean),
+    ),
+  );
 }
 
 function base(
