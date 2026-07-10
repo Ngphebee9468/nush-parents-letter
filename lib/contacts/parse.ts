@@ -4,6 +4,7 @@ import type { StaffRecord, TimetableRecord } from "./types";
 const venuePattern = /^(?:[A-Z]\d-\d+|LT\d+|THEATRETTE|LAB|ROOM|HALL)$/i;
 const timePattern = /^\d{1,2}[:.]\d{2}$/;
 const subjectNoise = /^(?:MON|TUE|WED|THU|FRI|SAT|SUN|BREAK|RECESS|LUNCH|ASSEMBLY)$/i;
+const pdfInternalPattern = /\b(?:endobj|obj|endstream|stream|decodeparms|filter|xref|trailer|adobe|flatedecode|length)\b/i;
 
 export async function extractTimetable(file: File, sessionId: string, className: string) {
   const text = await readPdfText(file);
@@ -21,7 +22,7 @@ export function parseTimetableText(text: string, sessionId: string, className: s
   const lines = text
     .split(/\r?\n|(?<=\w)\s{2,}(?=\w)/)
     .map((line) => line.trim())
-    .filter(Boolean);
+    .filter((line) => line && !looksLikePdfInternalLine(line));
   const records: TimetableRecord[] = [];
 
   for (const line of lines) {
@@ -62,8 +63,14 @@ export function parseTimetableText(text: string, sessionId: string, className: s
 async function readPdfText(file: File) {
   const buffer = await file.arrayBuffer();
   try {
-    const pdfjs = await import("pdfjs-dist");
-    const document = await pdfjs.getDocument({ data: buffer, useWorkerFetch: false, isEvalSupported: false }).promise;
+    const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
+    pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/legacy/build/pdf.worker.mjs`;
+    const document = await pdfjs.getDocument({
+      data: new Uint8Array(buffer),
+      useWorkerFetch: false,
+      isEvalSupported: false,
+      disableFontFace: true,
+    }).promise;
     const pageTexts: string[] = [];
     for (let pageNumber = 1; pageNumber <= document.numPages; pageNumber += 1) {
       const page = await document.getPage(pageNumber);
@@ -71,9 +78,9 @@ async function readPdfText(file: File) {
       pageTexts.push(content.items.map((item) => ("str" in item ? item.str : "")).join("\n"));
     }
     return pageTexts.join("\n");
-  } catch {
-    const fallback = new TextDecoder("latin1").decode(buffer);
-    return fallback.replace(/[^\x20-\x7E\n/|:.-]/g, " ");
+  } catch (error) {
+    console.error("[extractTimetable] pdf text extraction failed", error);
+    throw new Error("No text detected. Switching to OCR...");
   }
 }
 
@@ -255,4 +262,12 @@ function dedupe(records: TimetableRecord[]) {
     seen.add(key);
     return true;
   });
+}
+
+function looksLikePdfInternalLine(line: string) {
+  if (pdfInternalPattern.test(line)) return true;
+  const printable = line.replace(/\s/g, "");
+  if (printable.length < 4) return false;
+  const oddCharacters = printable.replace(/[A-Za-z0-9/|:.,()&+\-\s]/g, "");
+  return oddCharacters.length / printable.length > 0.25;
 }
