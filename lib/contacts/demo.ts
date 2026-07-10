@@ -4,7 +4,7 @@ export const demoSessionId = "a1000000-0000-0000-0000-000000000001";
 
 export const demoStaff: StaffRecord[] = [
   ["Mr Lim Chong Shen", "LCS", "English Language", "68533", "6516 8533", "nhslcs@nus.edu.sg"],
-  ["Ms Ng Oh Hwee", "NOH", "Biology", "68639", "6516 8639", "nhsnoh@nus.edu.sg"],
+  ["Ms Ng Oon Hui", "NOH", "Biology", "68639", "6516 8639", "nhsnoh@nus.edu.sg"],
   ["Mr Tan Hock Chuan", "THC", "Biology", "11804", "6601 1804", "nhsthc@nus.edu.sg"],
   ["Mr Balasubramaniam Raveen Wen", "BRW", "Physics", "11914", "6601 1914", "nhsbrw@nus.edu.sg"],
   ["Ms Muthu Tamilarasi", "MT", "English Language", "68412", "6516 8412", "nhsmt@nus.edu.sg"],

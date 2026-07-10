@@ -110,7 +110,7 @@ function parseDirectoryRows(
         const key = Object.keys(row).find((header) => patterns.some((pattern) => pattern.test(header)));
         return key ? String(row[key] ?? "").trim() : "";
       };
-      const fullName = get([/name/i, /staff/i, /teacher/i]);
+      const fullName = formatPersonName(get([/name/i, /staff/i, /teacher/i]));
       const initialsRaw = get([/initial/i, /code/i]);
       const email = cleanEmail(get([/email/i, /e-mail/i, /mail/i, /account/i, /user/i, /login/i]));
       const extension = get([/ext/i, /tel/i, /phone/i, /contact/i]);
@@ -175,9 +175,7 @@ function parseDirectoryLooseRow(
     const digits = cell.replace(/\D/g, "");
     return digits.length >= 4 && digits.length <= 8 && !/20\d{2}/.test(digits);
   }) ?? "";
-  const nameCell = row.find((cell) =>
-    /^(?:mr|ms|mrs|mdm|dr)\b/i.test(cell) || (/^[A-Z][a-z]+(?:\s+[A-Z][a-z]+)+/.test(cell) && !cell.includes("@")),
-  ) ?? "";
+  const nameCell = formatPersonName(row.find(isLikelyName) ?? "");
   const email = cleanEmail(emailCell || (usernameCell ? `${usernameCell}@nus.edu.sg` : ""));
   const initials = normaliseInitials(initialsCell) || initialsFromEmailUsername(email || usernameCell);
   const phone = normaliseTelephone(extensionCell, prefixes.tel6, prefixes.tel1);
@@ -202,6 +200,36 @@ function parseDirectoryLooseRow(
 
 function csvMatrix(text: string) {
   return text.split(/\r?\n/).filter(Boolean).map(splitCsvLine);
+}
+
+function isLikelyName(cell: string) {
+  if (!cell || cell.includes("@")) return false;
+  if (/^(?:mr|ms|mrs|mdm|dr)\b/i.test(cell)) return true;
+  if (/^(?:nhs|nush)[a-z]{1,6}$/i.test(cell)) return false;
+  if (/^\d/.test(cell) || /phone|list|updated|department|email|initial/i.test(cell)) return false;
+  const words = cell.replace(/[().,]/g, " ").trim().split(/\s+/).filter(Boolean);
+  if (words.length < 2 || words.length > 6) return false;
+  const alphaWords = words.filter((word) => /^[A-Za-z'-]+$/.test(word));
+  return alphaWords.length >= 2;
+}
+
+function formatPersonName(value: string) {
+  const cleaned = value.replace(/\s+/g, " ").trim();
+  if (!cleaned) return "";
+  return cleaned
+    .split(" ")
+    .map((word) => {
+      if (/^(mr|ms|mrs|mdm|dr)$/i.test(word.replace(".", ""))) {
+        const title = word.replace(".", "").toLowerCase();
+        return title === "mdm" ? "Mdm" : title.charAt(0).toUpperCase() + title.slice(1);
+      }
+      return word
+        .toLowerCase()
+        .split("-")
+        .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+        .join("-");
+    })
+    .join(" ");
 }
 
 function splitCsvLine(line: string) {

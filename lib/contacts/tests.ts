@@ -51,13 +51,17 @@ export function runRegressionChecks() {
   const looseDirectory = parseDirectoryMatrix(
     [
       ["Updated Staff Phone List", "", ""],
-      ["Ms Bee Wan Wen", "nhsbww", "68533"],
+      ["BAY WEE WEN", "nhsbww", "68533"],
     ],
     demo.session.id,
     "Loose",
     { tel6: "6516", tel1: "6601" },
   );
-  if (looseDirectory[0]?.initials_normalised !== "BWW" || looseDirectory[0]?.full_telephone !== "6516 8533") {
+  if (
+    looseDirectory[0]?.initials_normalised !== "BWW" ||
+    looseDirectory[0]?.full_name !== "Bay Wee Wen" ||
+    looseDirectory[0]?.full_telephone !== "6516 8533"
+  ) {
     throw new Error("Loose staff directory parsing regression failed");
   }
 }
