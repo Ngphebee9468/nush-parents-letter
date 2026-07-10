@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "vibe-stack-supabase",
-  description: "Next.js + Supabase starter",
+  title: "Class Teacher Contact Table Generator",
+  description: "Extract, review, and export parent-letter teacher contact tables.",
 };
 
 export default function RootLayout({

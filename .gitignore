@@ -1,5 +1,8 @@
 node_modules/
 .next/
+.cache/
+.pnpm-home/
+.pnpm-store/
 /out/
 /build
 .DS_Store
