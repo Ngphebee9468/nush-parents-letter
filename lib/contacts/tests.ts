@@ -64,4 +64,19 @@ export function runRegressionChecks() {
   ) {
     throw new Error("Loose staff directory parsing regression failed");
   }
+
+  const nameOnlyDirectory = parseDirectoryMatrix(
+    [["Chan Yu Ming", "Mathematics", "11804"]],
+    demo.session.id,
+    "Name only",
+    { tel6: "6516", tel1: "6601" },
+  );
+  const mathMatch = buildMatches(
+    demo.session.id,
+    [{ ...demo.timetable[0], id: "math-cym-timetable", subject_raw: "Math 6", subject_display: "Mathematics", teacher_initials_raw: "CYM", teacher_initials_normalised: "CYM" }],
+    nameOnlyDirectory,
+  )[0];
+  if (nameOnlyDirectory[0]?.initials_normalised !== "CYM" || mathMatch.status !== "confirmed_exact") {
+    throw new Error("Math CYM name-derived matching regression failed");
+  }
 }

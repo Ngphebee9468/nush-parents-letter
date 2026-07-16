@@ -88,6 +88,7 @@ function staffInitials(person: StaffRecord) {
   return Array.from(
     new Set(
       [person.initials_normalised, normaliseInitials(person.initials_raw), initialsFromEmailUsername(person.email)]
+        .concat(nameDerivedInitials(person.full_name))
         .filter(Boolean),
     ),
   );

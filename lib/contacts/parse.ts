@@ -1,4 +1,4 @@
-import { cleanEmail, emailUsername, initialsFromEmailUsername, normaliseInitials, normaliseTelephone, subjectDisplay } from "./normalise";
+import { cleanEmail, emailUsername, initialsFromEmailUsername, nameDerivedInitials, normaliseInitials, normaliseTelephone, subjectDisplay } from "./normalise";
 import type { StaffRecord, TimetableRecord } from "./types";
 
 const venuePattern = /^(?:[A-Z]\d-\d+|LT\d+|THEATRETTE|LAB|ROOM|HALL)$/i;
@@ -121,7 +121,7 @@ function parseDirectoryRows(
       const initialsRaw = get([/initial/i, /code/i]);
       const email = cleanEmail(get([/email/i, /e-mail/i, /mail/i, /account/i, /user/i, /login/i]));
       const extension = get([/ext/i, /tel/i, /phone/i, /contact/i]);
-      const initials = normaliseInitials(initialsRaw) || initialsFromEmailUsername(email);
+      const initials = normaliseInitials(initialsRaw) || initialsFromEmailUsername(email) || nameDerivedInitials(fullName);
       const phone = normaliseTelephone(extension, prefixes.tel6, prefixes.tel1);
 
       if (!fullName && !initials && !email) return null;
@@ -184,7 +184,7 @@ function parseDirectoryLooseRow(
   }) ?? "";
   const nameCell = formatPersonName(row.find(isLikelyName) ?? "");
   const email = cleanEmail(emailCell || (usernameCell ? `${usernameCell}@nus.edu.sg` : ""));
-  const initials = normaliseInitials(initialsCell) || initialsFromEmailUsername(email || usernameCell);
+  const initials = normaliseInitials(initialsCell) || initialsFromEmailUsername(email || usernameCell) || nameDerivedInitials(nameCell);
   const phone = normaliseTelephone(extensionCell, prefixes.tel6, prefixes.tel1);
 
   if (!email && !initials && !nameCell) return null;
