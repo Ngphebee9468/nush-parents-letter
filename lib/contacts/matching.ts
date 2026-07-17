@@ -4,7 +4,7 @@ import type { MatchRecord, StaffRecord, TimetableRecord } from "./types";
 const teacherAliasUsernames: Record<string, string[]> = {
   FKM: ["nhsfkm"],
   AKSY: ["anhsaksy"],
-  DTYY: ["nhsdty"],
+  DTYY: ["nhsdty", "nhsndty"],
   DCKL: ["dav_chee"],
   KLKF: ["nhslkf", "nhsllka"],
 };

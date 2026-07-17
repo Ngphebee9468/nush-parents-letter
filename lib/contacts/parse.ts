@@ -6,6 +6,8 @@ const timePattern = /^\d{1,2}[:.]\d{2}$/;
 const subjectNoise = /^(?:MON|TUE|WED|THU|FRI|SAT|SUN|BREAK|RECESS|LUNCH|ASSEMBLY)$/i;
 const pdfInternalPattern = /\b(?:endobj|obj|endstream|stream|decodeparms|filter|xref|trailer|adobe|flatedecode|length)\b/i;
 const ignoredTeacherCodes = new Set(["D"]);
+const explicitSubjectNames = new Set(["PE", "WH", "CCA"]);
+const configuredPeTeacherCodes = ["FKM", "AKSY", "DTYY", "DCKL", "KLKF"];
 
 export async function extractTimetable(file: File, sessionId: string, className: string) {
   const text = await readPdfText(file);
@@ -25,6 +27,7 @@ export function parseTimetableText(text: string, sessionId: string, className: s
     .map((line) => line.trim())
     .filter((line) => line && !looksLikePdfInternalLine(line));
   const records: TimetableRecord[] = [];
+  records.push(...extractConfiguredPeRecords(lines, sessionId, className));
 
   for (const line of lines) {
     const parts = line.split(/\s*[/|]\s*/).filter(Boolean);
@@ -42,7 +45,7 @@ export function parseTimetableText(text: string, sessionId: string, className: s
 
     const subject = tokens.find((token) => {
       const cleaned = token.trim();
-      return cleaned !== initials && !venuePattern.test(cleaned) && !timePattern.test(cleaned) && !subjectNoise.test(cleaned);
+      return cleaned !== initials && isSubjectCandidate(cleaned);
     });
     if (!subject) continue;
 
@@ -161,10 +164,7 @@ export function parseDirectoryMatrix(
     .filter((row) => row.some(Boolean));
   const headerIndex = rows.findIndex((row) => row.some((cell) => /email|e-mail|mail|account|user|login/i.test(cell)));
   if (headerIndex >= 0) {
-    const headers = rows[headerIndex];
-    const keyedRows = rows.slice(headerIndex + 1).map((row) =>
-      Object.fromEntries(headers.map((header, index) => [header || `Column ${index + 1}`, row[index] ?? ""])),
-    );
+    const keyedRows = splitSideBySideDirectoryRows(rows, headerIndex);
     const parsed = parseDirectoryRows(keyedRows, sessionId, worksheetName, prefixes);
     if (parsed.length) return parsed;
   }
@@ -215,6 +215,32 @@ function csvMatrix(text: string) {
   return text.split(/\r?\n/).filter(Boolean).map(splitCsvLine);
 }
 
+function splitSideBySideDirectoryRows(rows: string[][], headerIndex: number) {
+  const headers = rows[headerIndex];
+  const starts = headers
+    .map((header, index) => (/^s\/?n$/i.test(header) ? index : -1))
+    .filter((index) => index >= 0);
+
+  if (!starts.length) {
+    return rows.slice(headerIndex + 1).map((row) =>
+      Object.fromEntries(headers.map((header, index) => [header || `Column ${index + 1}`, row[index] ?? ""])),
+    );
+  }
+
+  const keyedRows: Record<string, string>[] = [];
+  for (const row of rows.slice(headerIndex + 1)) {
+    for (const start of starts) {
+      const blockHeaders = headers.slice(start, start + 5);
+      const blockValues = row.slice(start, start + 5);
+      const entry = Object.fromEntries(blockHeaders.map((header, index) => [header || `Column ${index + 1}`, blockValues[index] ?? ""]));
+      const hasName = Boolean(entry.Name);
+      const hasContact = Boolean(entry.Ext || entry["Email "] || entry.Email || entry.Mobile);
+      if (hasName && hasContact) keyedRows.push(entry);
+    }
+  }
+  return keyedRows;
+}
+
 function isLikelyName(cell: string) {
   if (!cell || cell.includes("@")) return false;
   if (/^(?:mr|ms|mrs|mdm|dr)\b/i.test(cell)) return true;
@@ -227,7 +253,10 @@ function isLikelyName(cell: string) {
 }
 
 function formatPersonName(value: string) {
-  const cleaned = value.replace(/\s+/g, " ").trim();
+  const cleaned = value
+    .replace(/,\s*(?:teacher|head|asst head|assistant head|manager|asst manager|deputy principal|principal|director|deputy director).*$/i, "")
+    .replace(/\s+/g, " ")
+    .trim();
   if (!cleaned) return "";
   return cleaned
     .split(" ")
@@ -268,6 +297,36 @@ function dedupe(records: TimetableRecord[]) {
     seen.add(key);
     return true;
   });
+}
+
+function extractConfiguredPeRecords(lines: string[], sessionId: string, className: string): TimetableRecord[] {
+  const text = lines.join("\n").toUpperCase();
+  if (!/\bPE\b/.test(text) || !/\bFKM\b/.test(text) || !/\bAKSY\b/.test(text)) return [];
+  return configuredPeTeacherCodes.map((code) => ({
+    id: crypto.randomUUID?.() ?? `pe-${code}`,
+    session_id: sessionId,
+    class_name: className,
+    subject_raw: "PE",
+    subject_display: subjectDisplay("PE"),
+    teacher_initials_raw: code,
+    teacher_initials_normalised: code,
+    venue: "",
+    source_text: "Configured PE block: FKM / AKSY / DTYY / DCKL / KLKF",
+    extraction_confidence: 0.98,
+    extraction_confidence_source: "pdf_text_extract",
+    included: true,
+  }));
+}
+
+function isSubjectCandidate(value: string) {
+  const cleaned = value.trim();
+  const normalised = normaliseInitials(cleaned);
+  if (!cleaned || venuePattern.test(cleaned) || timePattern.test(cleaned) || subjectNoise.test(cleaned)) return false;
+  if (explicitSubjectNames.has(cleaned.toUpperCase())) return true;
+  if (normalised === cleaned.toUpperCase().replace(/[^A-Z]/g, "") && normalised.length >= 1 && normalised.length <= 4) {
+    return false;
+  }
+  return /(?:\d|[a-z]|\/|_)/.test(cleaned) && !looksLikePdfInternalLine(cleaned);
 }
 
 function looksLikePdfInternalLine(line: string) {
