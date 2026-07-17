@@ -44,6 +44,7 @@ describe("contact generator regressions", () => {
     expect(rows.map((row) => `${row.subject_raw}:${row.teacher_initials_normalised}`)).toEqual(
       expect.arrayContaining(["Math 1:JT", "Math 2:CVL", "Physics 1:BG", "DV 1:CSY", "DV 1:APC", "PE:FKM", "PE:KLKF"]),
     );
+    expect(rows.map((row) => row.teacher_initials_normalised)).not.toContain("ZMATHV");
   });
 
   it("renders PE multi-teacher contact rows like the requested table", () => {
@@ -70,13 +71,19 @@ describe("contact generator regressions", () => {
     const timetable = [
       { ...demo.timetable[0], id: "math-jt", subject_raw: "Math 1", subject_display: "Math 1", teacher_initials_raw: "JT", teacher_initials_normalised: "JT" },
       { ...demo.timetable[0], id: "dv-apc", subject_raw: "DV 1", subject_display: "DV 1", teacher_initials_raw: "APC", teacher_initials_normalised: "APC" },
-      { ...demo.timetable[0], id: "robot-z", subject_raw: "Robot 1", subject_display: "Robot 1", teacher_initials_raw: "Z_MATHV", teacher_initials_normalised: "ZMATHV" },
+      { ...demo.timetable[0], id: "dv-ay", subject_raw: "DV 1", subject_display: "DV 1", teacher_initials_raw: "AY", teacher_initials_normalised: "AY" },
+      { ...demo.timetable[0], id: "cl-z", subject_raw: "CL 1", subject_display: "CL 1", teacher_initials_raw: "Z_CL", teacher_initials_normalised: "ZCL" },
+      { ...demo.timetable[0], id: "tl-z", subject_raw: "TH/TL 1", subject_display: "TH/TL 1", teacher_initials_raw: "Z_TL", teacher_initials_normalised: "ZTL" },
+      { ...demo.timetable[0], id: "mg", subject_raw: "JP 1_Enrich", subject_display: "JP 1_Enrich", teacher_initials_raw: "MG", teacher_initials_normalised: "MG" },
     ];
     const data = { ...demo, timetable, matches: buildMatches(demo.session.id, timetable, []) };
     expect(previewRows(data)).toEqual([
       { Subject: "Math 1", Teacher: "Joyce Tan", "Tel. No.": "", "Email Add.": "" },
-      { Subject: "DV 1", Teacher: "Unverified code APC", "Tel. No.": "", "Email Add.": "" },
-      { Subject: "Robot 1", Teacher: "Math Vendor", "Tel. No.": "", "Email Add.": "" },
+      { Subject: "DV 1", Teacher: "Mr Ang Pow Chew", "Tel. No.": "6516 3484", "Email Add.": "powchew@nus.edu.sg" },
+      { Subject: "", Teacher: "Dr Yoanna Arlina Kurnianingsih", "Tel. No.": "6516 1508", "Email Add.": "yak@nus.edu.sg" },
+      { Subject: "CL 1", Teacher: "Mr Zheng Dehua", "Tel. No.": "6516 1899", "Email Add.": "anhszdh2@nus.edu.sg" },
+      { Subject: "TH/TL 1", Teacher: "Mdm Subramanian Vasuki", "Tel. No.": "6516 3650", "Email Add.": "vasuki14@nus.edu.sg" },
+      { Subject: "JP 1_Enrich", Teacher: "Mrs Elizabeth Mariko Nishida Gomez", "Tel. No.": "6516 4449", "Email Add.": "nhsemg@nus.edu.sg" },
     ]);
   });
 });

@@ -5,7 +5,7 @@ const venuePattern = /^(?:[A-Z]\d-\d+|LT\d+|THEATRETTE|LAB|ROOM|HALL)$/i;
 const timePattern = /^\d{1,2}[:.]\d{2}$/;
 const subjectNoise = /^(?:MON|TUE|WED|THU|FRI|SAT|SUN|BREAK|RECESS|LUNCH|ASSEMBLY)$/i;
 const pdfInternalPattern = /\b(?:endobj|obj|endstream|stream|decodeparms|filter|xref|trailer|adobe|flatedecode|length)\b/i;
-const ignoredTeacherCodes = new Set(["D"]);
+const ignoredTeacherCodes = new Set(["D", "ZMATH", "ZMATHV"]);
 const explicitSubjectNames = new Set(["PE", "WH", "CCA"]);
 const configuredPeTeacherCodes = ["FKM", "AKSY", "DTYY", "DCKL", "KLKF"];
 
@@ -337,7 +337,6 @@ function extractKnownTimetableRecords(lines: string[], sessionId: string, classN
     { subject: "Chem Pot 1", codes: ["KSB"] },
     { subject: "Robot 1", codes: ["HT"] },
     { subject: "Math Oly 1", codes: ["VJZ"] },
-    { subject: "Math Oly 1V", codes: ["Z_MATHV"] },
     { subject: "CS_Enr 1n2", codes: ["NCL", "PL"] },
     { subject: "Astro 1", codes: ["YXH"] },
     { subject: "JP 1_Enrich", codes: ["MG"] },
