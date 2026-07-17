@@ -37,12 +37,12 @@ describe("contact generator regressions", () => {
 
   it("extracts class 101 subject rows and configured PE teachers", () => {
     const rows = parseTimetableText(
-      "Math 1\nJT\nMath 2\nCVL\nPhysics 1 DV 1\nBG\nCSY / AY / HHX / APC\nWH Physics 1 PE Recess Lunch Music 1\nFKM / AKSY\nDTYY / DCKL\nKLKF",
+      "Math 1\nJT\nMath 2\nCVL\nPhysics 1 DV 1\nBG\nCSY / AY / HHX / APC\nBio Oly 2\nVLSF / KF\nWH Physics 1 PE Recess Lunch Music 1\nFKM / AKSY\nDTYY / DCKL\nKLKF",
       "session",
       "101",
     );
     expect(rows.map((row) => `${row.subject_raw}:${row.teacher_initials_normalised}`)).toEqual(
-      expect.arrayContaining(["Math 1:JT", "Math 2:CVL", "Physics 1:BG", "DV 1:CSY", "DV 1:APC", "PE:FKM", "PE:KLKF"]),
+      expect.arrayContaining(["Math 1:JT", "Math 2:CVL", "Physics 1:BG", "DV 1:CSY", "DV 1:APC", "Bio Oly 2:VLSF", "Bio Oly 2:KF", "PE:FKM", "PE:KLKF"]),
     );
     expect(rows.map((row) => row.teacher_initials_normalised)).not.toContain("ZMATHV");
   });
@@ -76,6 +76,8 @@ describe("contact generator regressions", () => {
       { ...demo.timetable[0], id: "tl-z", subject_raw: "TH/TL 1", subject_display: "TH/TL 1", teacher_initials_raw: "Z_TL", teacher_initials_normalised: "ZTL" },
       { ...demo.timetable[0], id: "mg", subject_raw: "JP 1_Enrich", subject_display: "JP 1_Enrich", teacher_initials_raw: "MG", teacher_initials_normalised: "MG" },
       { ...demo.timetable[0], id: "pl", subject_raw: "CS_Enr 1n2", subject_display: "CS_Enr 1n2", teacher_initials_raw: "PL", teacher_initials_normalised: "PL" },
+      { ...demo.timetable[0], id: "bio-oly-vlsf", subject_raw: "Bio Oly 2", subject_display: "Bio Oly 2", teacher_initials_raw: "VLSF", teacher_initials_normalised: "VLSF" },
+      { ...demo.timetable[0], id: "bio-oly-kf", subject_raw: "Bio Oly 2", subject_display: "Bio Oly 2", teacher_initials_raw: "KF", teacher_initials_normalised: "KF" },
     ];
     const data = { ...demo, timetable, matches: buildMatches(demo.session.id, timetable, []) };
     expect(previewRows(data)).toEqual([
@@ -85,7 +87,9 @@ describe("contact generator regressions", () => {
       { Subject: "CL 1", Teacher: "Mr Zheng Dehua", "Tel. No.": "6516 1899", "Email Add.": "anhszdh2@nus.edu.sg" },
       { Subject: "TH/TL 1", Teacher: "Mdm Subramanian Vasuki", "Tel. No.": "6516 3650", "Email Add.": "vasuki14@nus.edu.sg" },
       { Subject: "JP 1_Enrich", Teacher: "Mrs Elizabeth Mariko Nishida Gomez", "Tel. No.": "6516 4449", "Email Add.": "nhsemg@nus.edu.sg" },
-      { Subject: "CS_Enr 1n2", Teacher: "Ms Chew Shuhui Phylliscia", "Tel. No.": "6516 7064", "Email Add.": "nhscsp@nus.edu.sg" },
+      { Subject: "CS_Enr 1n2", Teacher: "Phylliscia Lee", "Tel. No.": "6516 7064", "Email Add.": "nhscsp@nus.edu.sg" },
+      { Subject: "Bio Oly 2", Teacher: "Ms Lim Suat Fong Valerie", "Tel. No.": "6516 7301", "Email Add.": "nhslsf@nus.edu.sg" },
+      { Subject: "", Teacher: "Mrs Fernandez Kalpana", "Tel. No.": "6516 5704", "Email Add.": "nhskalpa@nus.edu.sg" },
     ]);
   });
 });
