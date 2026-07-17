@@ -74,9 +74,9 @@ describe("contact generator regressions", () => {
     ];
     const data = { ...demo, timetable, matches: buildMatches(demo.session.id, timetable, []) };
     expect(previewRows(data)).toEqual([
-      { Subject: "Math 1", Teacher: "Mr Tan Jit Bin Joseph", "Tel. No.": "6516 8648", "Email Add.": "nhstj@nus.edu.sg" },
-      { Subject: "DV 1", Teacher: "Mr Ang Pow Chew", "Tel. No.": "6516 3484", "Email Add.": "powchew@nus.edu.sg" },
-      { Subject: "Robot 1", Teacher: "Unmatched code: Z_MATHV", "Tel. No.": "", "Email Add.": "" },
+      { Subject: "Math 1", Teacher: "Joyce Tan", "Tel. No.": "", "Email Add.": "" },
+      { Subject: "DV 1", Teacher: "Unverified code APC", "Tel. No.": "", "Email Add.": "" },
+      { Subject: "Robot 1", Teacher: "Math Vendor", "Tel. No.": "", "Email Add.": "" },
     ]);
   });
 });
