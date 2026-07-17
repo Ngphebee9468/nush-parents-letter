@@ -75,15 +75,17 @@ describe("contact generator regressions", () => {
       { ...demo.timetable[0], id: "cl-z", subject_raw: "CL 1", subject_display: "CL 1", teacher_initials_raw: "Z_CL", teacher_initials_normalised: "ZCL" },
       { ...demo.timetable[0], id: "tl-z", subject_raw: "TH/TL 1", subject_display: "TH/TL 1", teacher_initials_raw: "Z_TL", teacher_initials_normalised: "ZTL" },
       { ...demo.timetable[0], id: "mg", subject_raw: "JP 1_Enrich", subject_display: "JP 1_Enrich", teacher_initials_raw: "MG", teacher_initials_normalised: "MG" },
+      { ...demo.timetable[0], id: "pl", subject_raw: "CS_Enr 1n2", subject_display: "CS_Enr 1n2", teacher_initials_raw: "PL", teacher_initials_normalised: "PL" },
     ];
     const data = { ...demo, timetable, matches: buildMatches(demo.session.id, timetable, []) };
     expect(previewRows(data)).toEqual([
-      { Subject: "Math 1", Teacher: "Joyce Tan", "Tel. No.": "", "Email Add.": "" },
+      { Subject: "Math 1", Teacher: "Ms Seow Chwee Loon Joyce", "Tel. No.": "6516 1724", "Email Add.": "nhsscl@nus.edu.sg" },
       { Subject: "DV 1", Teacher: "Mr Ang Pow Chew", "Tel. No.": "6516 3484", "Email Add.": "powchew@nus.edu.sg" },
       { Subject: "", Teacher: "Dr Yoanna Arlina Kurnianingsih", "Tel. No.": "6516 1508", "Email Add.": "yak@nus.edu.sg" },
       { Subject: "CL 1", Teacher: "Mr Zheng Dehua", "Tel. No.": "6516 1899", "Email Add.": "anhszdh2@nus.edu.sg" },
       { Subject: "TH/TL 1", Teacher: "Mdm Subramanian Vasuki", "Tel. No.": "6516 3650", "Email Add.": "vasuki14@nus.edu.sg" },
       { Subject: "JP 1_Enrich", Teacher: "Mrs Elizabeth Mariko Nishida Gomez", "Tel. No.": "6516 4449", "Email Add.": "nhsemg@nus.edu.sg" },
+      { Subject: "CS_Enr 1n2", Teacher: "Ms Chew Shuhui Phylliscia", "Tel. No.": "6516 7064", "Email Add.": "nhscsp@nus.edu.sg" },
     ]);
   });
 });

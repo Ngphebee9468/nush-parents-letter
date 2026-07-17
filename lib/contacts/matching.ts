@@ -3,6 +3,7 @@ import type { MatchRecord, StaffRecord, TimetableRecord } from "./types";
 
 const teacherAliasUsernames: Record<string, string[]> = {
   IK: ["nhski"],
+  JT: ["nhsscl"],
   CVL: ["nhscvl"],
   TCYE: ["anhstcye"],
   TCY: ["nhstcy"],
@@ -19,6 +20,7 @@ const teacherAliasUsernames: Record<string, string[]> = {
   HT: ["nhstsk"],
   VJZ: ["nhsjz"],
   NCL: ["nhsncl"],
+  PL: ["nhscsp"],
   MG: ["nhsemg"],
   CCH: ["nhscch"],
   RBI: ["nhsri"],
@@ -37,7 +39,7 @@ const teacherAliasUsernames: Record<string, string[]> = {
 const teacherAliasFallback: Record<string, Array<{ name: string; tel: string; email: string }>> = {
   IK: [{ name: "Ms Koo Ivy", tel: "6516 7298", email: "nhski@nus.edu.sg" }],
   MS: [{ name: "Unverified code MS", tel: "", email: "" }],
-  JT: [{ name: "Joyce Tan", tel: "", email: "" }],
+  JT: [{ name: "Ms Seow Chwee Loon Joyce", tel: "6516 1724", email: "nhsscl@nus.edu.sg" }],
   CVL: [{ name: "Mr Chia Vui Leong", tel: "6516 1728", email: "nhscvl@nus.edu.sg" }],
   TCYE: [{ name: "Mr Choo Yi En Theodore", tel: "6516 5368", email: "anhstcye@nus.edu.sg" }],
   TCY: [{ name: "Mr Toh Chen Yeong", tel: "6516 1733", email: "nhstcy@nus.edu.sg" }],
@@ -55,7 +57,7 @@ const teacherAliasFallback: Record<string, Array<{ name: string; tel: string; em
   VJZ: [{ name: "Ms Jiang Zewei Vivian", tel: "6601 3239", email: "nhsjz@nus.edu.sg" }],
   ZMATHV: [{ name: "Math Vendor", tel: "", email: "" }],
   NCL: [{ name: "Mr Ng Chee Loong", tel: "6516 1726", email: "nhsncl@nus.edu.sg" }],
-  PL: [{ name: "Phylliscia Lee", tel: "", email: "" }],
+  PL: [{ name: "Ms Chew Shuhui Phylliscia", tel: "6516 7064", email: "nhscsp@nus.edu.sg" }],
   YXH: [{ name: "Unverified code YXH", tel: "", email: "" }],
   MG: [{ name: "Mrs Elizabeth Mariko Nishida Gomez", tel: "6516 4449", email: "nhsemg@nus.edu.sg" }],
   CCH: [{ name: "Mr Chua Chin Haw", tel: "6516 1737", email: "nhscch@nus.edu.sg" }],
