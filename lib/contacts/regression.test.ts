@@ -64,4 +64,19 @@ describe("contact generator regressions", () => {
       { Subject: "", Teacher: "Ms Loh Lai Kiang Angela", "Tel. No.": "6516 2408", "Email Add.": "nhsllka@nus.edu.sg" },
     ]);
   });
+
+  it("fills known class 101 non-PE contacts instead of blank preview cells", () => {
+    const demo = demoData();
+    const timetable = [
+      { ...demo.timetable[0], id: "math-jt", subject_raw: "Math 1", subject_display: "Math 1", teacher_initials_raw: "JT", teacher_initials_normalised: "JT" },
+      { ...demo.timetable[0], id: "dv-apc", subject_raw: "DV 1", subject_display: "DV 1", teacher_initials_raw: "APC", teacher_initials_normalised: "APC" },
+      { ...demo.timetable[0], id: "robot-z", subject_raw: "Robot 1", subject_display: "Robot 1", teacher_initials_raw: "Z_MATHV", teacher_initials_normalised: "ZMATHV" },
+    ];
+    const data = { ...demo, timetable, matches: buildMatches(demo.session.id, timetable, []) };
+    expect(previewRows(data)).toEqual([
+      { Subject: "Math 1", Teacher: "Mr Tan Jit Bin Joseph", "Tel. No.": "6516 8648", "Email Add.": "nhstj@nus.edu.sg" },
+      { Subject: "DV 1", Teacher: "Mr Ang Pow Chew", "Tel. No.": "6516 3484", "Email Add.": "powchew@nus.edu.sg" },
+      { Subject: "Robot 1", Teacher: "Unmatched code: Z_MATHV", "Tel. No.": "", "Email Add.": "" },
+    ]);
+  });
 });

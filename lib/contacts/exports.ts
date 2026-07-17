@@ -119,10 +119,15 @@ function rowsFrom(record: TimetableRecord, match?: MatchRecord, staff?: StaffRec
 function rowFrom(record: TimetableRecord, match?: MatchRecord, staff?: StaffRecord): ExportRow {
   return {
     Subject: record.subject_display || record.subject_raw,
-    Teacher: match?.manual_name || staff?.full_name || "",
+    Teacher: match?.manual_name || staff?.full_name || unresolvedCodeLabel(record, match),
     "Tel. No.": match?.manual_tel || staff?.full_telephone || "",
     "Email Add.": match?.manual_email || staff?.email || "",
   };
+}
+
+function unresolvedCodeLabel(record: TimetableRecord, match?: MatchRecord) {
+  if (!match || match.status === "confirmed_exact" || match.status === "manually_selected") return "";
+  return `Unmatched code: ${record.teacher_initials_raw || record.teacher_initials_normalised}`;
 }
 
 function splitJoined(value: string | undefined) {

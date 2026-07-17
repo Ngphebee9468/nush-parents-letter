@@ -7,7 +7,7 @@ export function normaliseInitials(value: string | null | undefined) {
 export function cleanEmail(value: string | null | undefined) {
   const email = String(value ?? "").trim().toLowerCase();
   const cleaned = email.replace(/^mailto:/, "");
-  if (/^(?:a?nhs|nush|dav_)[a-z0-9._-]+$/i.test(cleaned)) return `${cleaned}@nus.edu.sg`;
+  if (/^[a-z0-9._-]+$/i.test(cleaned) && /[a-z]/i.test(cleaned)) return `${cleaned}@nus.edu.sg`;
   return cleaned;
 }
 
