@@ -8,6 +8,7 @@ import { normaliseInitials, subjectDisplay } from "@/lib/contacts/normalise";
 import { extractTimetable, parseDirectory } from "@/lib/contacts/parse";
 import { copyHtml, downloadCsv, exportDocx, exportPdf, exportXlsx, previewRows } from "@/lib/contacts/exports";
 import { runRegressionChecks } from "@/lib/contacts/tests";
+import { hasSupabaseBrowserEnv } from "@/lib/supabase/env";
 import type { AppData, MatchRecord, Stage } from "@/lib/contacts/types";
 
 const stages: Stage[] = ["upload", "extract", "match", "review", "export"];
@@ -36,7 +37,7 @@ export default function Home() {
   useEffect(() => {
     try {
       runRegressionChecks();
-      setUseSupabase(Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY));
+      setUseSupabase(hasSupabaseBrowserEnv());
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Regression checks failed.");
     }
@@ -90,7 +91,7 @@ export default function Home() {
     await supabase.from("sessions").upsert(next.session);
     await supabase.from("timetable_records").insert(next.timetable);
     await supabase.from("staff_records").insert(next.staff);
-    await supabase.from("match_records").insert(next.matches.map(({ manual_name, manual_tel, manual_email, ...match }) => match));
+    await supabase.from("match_records").insert(next.matches.map(stripClientOnlyMatchFields));
     const uploads = [
       ["timetable", uploaded.timetable],
       ["directory", uploaded.directory],
@@ -104,8 +105,7 @@ export default function Home() {
   async function updateMatch(match: MatchRecord) {
     setData((current) => ({ ...current, matches: current.matches.map((item) => (item.id === match.id ? match : item)) }));
     if (useSupabase) {
-      const { manual_name, manual_tel, manual_email, ...dbMatch } = match;
-      await createClient().from("match_records").upsert(dbMatch);
+      await createClient().from("match_records").upsert(stripClientOnlyMatchFields(match));
     }
   }
 
@@ -221,7 +221,7 @@ function UploadPanel({ files, setFiles, processFiles, busy, setMessage }: {
   return (
     <section className="grid gap-3 md:grid-cols-3">
       <FileBox title="Timetable PDF" accept="application/pdf" file={files.timetable} onFile={assign("timetable", ["pdf"], 20)} />
-      <FileBox title="Staff directory" accept=".xlsx,.csv" file={files.directory} onFile={assign("directory", ["xlsx", "csv"], 10)} />
+      <FileBox title="Staff directory" accept=".xlsx,.xls" file={files.directory} onFile={assign("directory", ["xlsx", "xls"], 10)} />
       <FileBox title="Letter template" accept=".docx" file={files.template} onFile={assign("template", ["docx"], 5)} />
       <div className="md:col-span-3">
         <button className="primary" disabled={busy || !files.timetable || !files.directory} onClick={processFiles}>{busy ? "Processing..." : "Process files"}</button>
@@ -347,7 +347,7 @@ function Preview({ rows, exportFile, unresolved }: { rows: ReturnType<typeof pre
         </div>
       </div>
       <table className="mt-4 w-full border-collapse text-sm">
-        <thead><tr className="bg-slate-200">{["Subject", "Teacher", "Tel. No.", "Email Address"].map((header) => <th className="border border-slate-400 px-3 py-2 text-center font-bold" key={header}>{header}</th>)}</tr></thead>
+        <thead><tr className="bg-slate-200">{["Subject", "Teacher", "Tel. No.", "Email Add."].map((header) => <th className="border border-slate-400 px-3 py-2 text-center font-bold" key={header}>{header}</th>)}</tr></thead>
         <tbody>{rows.map((row, index) => <tr key={`${row.Subject}-${index}`}>{Object.values(row).map((value, cell) => <td className="border border-slate-300 px-3 py-2" key={cell}>{value}</td>)}</tr>)}</tbody>
       </table>
     </section>
@@ -358,9 +358,19 @@ function validate(file: File, extensions: string[], maxMb: number) {
   const extension = file.name.split(".").pop()?.toLowerCase() ?? "";
   if (!extensions.includes(extension)) throw new Error(`Unsupported file type. Please upload a ${extensions.join("/").toUpperCase()} file.`);
   if (file.size > maxMb * 1024 * 1024) throw new Error(`File too large. Maximum size is ${maxMb} MB.`);
+  if (extension === "pdf" && file.type && file.type !== "application/pdf") throw new Error("The timetable must be a real PDF file.");
+  if (["xlsx", "xls"].includes(extension) && file.type && !/spreadsheet|excel|octet-stream/i.test(file.type)) {
+    throw new Error("The staff directory must be an Excel workbook.");
+  }
   return file;
 }
 
 function cleanFileName(value: string) {
   return value.replace(/[^a-z0-9._-]/gi, "_");
+}
+
+function stripClientOnlyMatchFields(match: MatchRecord) {
+  return Object.fromEntries(
+    Object.entries(match).filter(([key]) => !["manual_name", "manual_tel", "manual_email"].includes(key)),
+  );
 }

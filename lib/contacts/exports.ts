@@ -5,21 +5,22 @@ export type ExportRow = {
   Subject: string;
   Teacher: string;
   "Tel. No.": string;
-  "Email Address": string;
+  "Email Add.": string;
 };
 
 export function previewRows(data: AppData): ExportRow[] {
-  return data.timetable
+  const rows = data.timetable
     .filter((record) => record.included)
     .flatMap((record) => {
       const match = data.matches.find((item) => item.timetable_record_id === record.id);
       const staff = match?.staff_record_id ? data.staff.find((item) => item.id === match.staff_record_id) : undefined;
       return rowsFrom(record, match, staff);
     });
+  return groupSubjectCells(rows);
 }
 
 export function csvContent(rows: ExportRow[]) {
-  const headers = ["Subject", "Teacher", "Tel. No.", "Email Address"] as const;
+  const headers = ["Subject", "Teacher", "Tel. No.", "Email Add."] as const;
   return [
     headers.join(","),
     ...rows.map((row) =>
@@ -40,7 +41,7 @@ export async function exportXlsx(rows: ExportRow[], filename: string) {
 
 export async function exportDocx(rows: ExportRow[], filename: string) {
   const { Document, Packer, Paragraph, Table, TableCell, TableRow, TextRun, WidthType } = await import("docx");
-  const headers = ["Subject", "Teacher", "Tel. No.", "Email Address"];
+  const headers = ["Subject", "Teacher", "Tel. No.", "Email Add."];
   const table = new Table({
     width: { size: 100, type: WidthType.PERCENTAGE },
     rows: [
@@ -73,7 +74,7 @@ export async function exportPdf(rows: ExportRow[], filename: string) {
   let y = 28;
   for (const row of rows) {
     doc.setFontSize(10);
-    doc.text(`${row.Subject} | ${row.Teacher} | ${row["Tel. No."]} | ${row["Email Address"]}`, 14, y);
+    doc.text(`${row.Subject} | ${row.Teacher} | ${row["Tel. No."]} | ${row["Email Add."]}`, 14, y);
     y += 8;
     if (y > 280) {
       doc.addPage();
@@ -88,8 +89,8 @@ export function downloadCsv(rows: ExportRow[], filename: string) {
 }
 
 export async function copyHtml(rows: ExportRow[]) {
-  const html = `<table><thead><tr><th>Subject</th><th>Teacher</th><th>Tel. No.</th><th>Email Address</th></tr></thead><tbody>${rows
-    .map((row) => `<tr><td>${escapeHtml(row.Subject)}</td><td>${escapeHtml(row.Teacher)}</td><td>${escapeHtml(row["Tel. No."])}</td><td>${escapeHtml(row["Email Address"])}</td></tr>`)
+  const html = `<table><thead><tr><th>Subject</th><th>Teacher</th><th>Tel. No.</th><th>Email Add.</th></tr></thead><tbody>${rows
+    .map((row) => `<tr><td>${escapeHtml(row.Subject)}</td><td>${escapeHtml(row.Teacher)}</td><td>${escapeHtml(row["Tel. No."])}</td><td>${escapeHtml(row["Email Add."])}</td></tr>`)
     .join("")}</tbody></table>`;
   await navigator.clipboard.write([
     new ClipboardItem({
@@ -109,7 +110,7 @@ function rowsFrom(record: TimetableRecord, match?: MatchRecord, staff?: StaffRec
       Subject: record.subject_display || record.subject_raw,
       Teacher: names[index] ?? names[0] ?? "",
       "Tel. No.": tels[index] ?? tels[0] ?? "",
-      "Email Address": emails[index] ?? emails[0] ?? "",
+      "Email Add.": emails[index] ?? emails[0] ?? "",
     }));
   }
   return [rowFrom(record, match, staff)];
@@ -120,7 +121,7 @@ function rowFrom(record: TimetableRecord, match?: MatchRecord, staff?: StaffReco
     Subject: record.subject_display || record.subject_raw,
     Teacher: match?.manual_name || staff?.full_name || "",
     "Tel. No.": match?.manual_tel || staff?.full_telephone || "",
-    "Email Address": match?.manual_email || staff?.email || "",
+    "Email Add.": match?.manual_email || staff?.email || "",
   };
 }
 
@@ -128,12 +129,22 @@ function splitJoined(value: string | undefined) {
   return value?.split(/\s+\/\s+/).map((item) => item.trim()).filter(Boolean) ?? [];
 }
 
+function groupSubjectCells(rows: ExportRow[]) {
+  let previous = "";
+  return rows.map((row) => {
+    const subject = row.Subject;
+    const next = { ...row, Subject: subject === previous ? "" : subject };
+    if (subject) previous = subject;
+    return next;
+  });
+}
+
 function sanitiseRow(row: ExportRow): ExportRow {
   return {
     Subject: safeExportCell(row.Subject),
     Teacher: safeExportCell(row.Teacher),
     "Tel. No.": safeExportCell(row["Tel. No."]),
-    "Email Address": safeExportCell(row["Email Address"]),
+    "Email Add.": safeExportCell(row["Email Add."]),
   };
 }
 

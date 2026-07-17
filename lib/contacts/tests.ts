@@ -12,7 +12,7 @@ export function runRegressionChecks() {
     ["65168533", "6516 8533", false],
     ["66011804", "6601 1804", false],
     ["", "", true],
-    ["8533", "", true],
+    ["8533", "8533", true],
   ];
   for (const [input, expected, review] of phoneCases) {
     const result = normaliseTelephone(input);

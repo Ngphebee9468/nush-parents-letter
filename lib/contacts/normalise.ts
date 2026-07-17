@@ -6,7 +6,9 @@ export function normaliseInitials(value: string | null | undefined) {
 
 export function cleanEmail(value: string | null | undefined) {
   const email = String(value ?? "").trim().toLowerCase();
-  return email.replace(/^mailto:/, "");
+  const cleaned = email.replace(/^mailto:/, "");
+  if (/^(?:a?nhs|nush|dav_)[a-z0-9._-]+$/i.test(cleaned)) return `${cleaned}@nus.edu.sg`;
+  return cleaned;
 }
 
 export function emailUsername(email: string) {
@@ -26,7 +28,7 @@ export function normaliseTelephone(
   const raw = String(value ?? "").trim();
   const digits = raw.replace(/\D/g, "");
 
-  if (!digits) return { full_telephone: "", telephone_review_required: true };
+  if (!digits) return { full_telephone: raw, telephone_review_required: true };
   if (digits.length === 8 && digits.startsWith(prefix6)) {
     return { full_telephone: `${prefix6} ${digits.slice(4)}`, telephone_review_required: false };
   }
@@ -40,7 +42,7 @@ export function normaliseTelephone(
     return { full_telephone: `${prefix1} ${digits.slice(1)}`, telephone_review_required: false };
   }
   if (digits.length === 4) {
-    return { full_telephone: "", telephone_review_required: true };
+    return { full_telephone: raw, telephone_review_required: true };
   }
   return { full_telephone: raw, telephone_review_required: true };
 }
