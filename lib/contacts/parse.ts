@@ -5,6 +5,7 @@ const venuePattern = /^(?:[A-Z]\d-\d+|LT\d+|THEATRETTE|LAB|ROOM|HALL)$/i;
 const timePattern = /^\d{1,2}[:.]\d{2}$/;
 const subjectNoise = /^(?:MON|TUE|WED|THU|FRI|SAT|SUN|BREAK|RECESS|LUNCH|ASSEMBLY)$/i;
 const pdfInternalPattern = /\b(?:endobj|obj|endstream|stream|decodeparms|filter|xref|trailer|adobe|flatedecode|length)\b/i;
+const ignoredTeacherCodes = new Set(["D"]);
 
 export async function extractTimetable(file: File, sessionId: string, className: string) {
   const text = await readPdfText(file);
@@ -30,7 +31,12 @@ export function parseTimetableText(text: string, sessionId: string, className: s
     const tokens = parts.length > 1 ? parts : line.split(/\s{2,}/).filter(Boolean);
     const initials = tokens.find((token) => {
       const normalised = normaliseInitials(token);
-      return normalised.length >= 1 && normalised.length <= 4 && normalised === token.replace(/[^A-Za-z]/g, "").toUpperCase();
+      return (
+        normalised.length >= 1 &&
+        normalised.length <= 4 &&
+        !ignoredTeacherCodes.has(normalised) &&
+        normalised === token.replace(/[^A-Za-z]/g, "").toUpperCase()
+      );
     });
     if (!initials) continue;
 

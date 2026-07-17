@@ -15,7 +15,7 @@ export function emailUsername(email: string) {
 
 export function initialsFromEmailUsername(value: string | null | undefined) {
   const username = emailUsername(String(value ?? "").includes("@") ? String(value ?? "") : `${value ?? ""}@example.invalid`);
-  return normaliseInitials(username.replace(/^(nhs|nush|sst|staff|teacher)/i, ""));
+  return normaliseInitials(username.replace(/^(anhs|nhs|nush|sst|staff|teacher)/i, ""));
 }
 
 export function normaliseTelephone(
@@ -67,6 +67,7 @@ export function subjectDisplay(subject: string) {
     "BIO HON 6": "Biology Honours",
     "PHYS HON 6": "Physics Honours",
     "CHEM HON 6": "Chemistry Honours",
+    "PE": "Physical Education",
   };
   return map[subject.toUpperCase()] ?? subject;
 }

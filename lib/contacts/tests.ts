@@ -79,4 +79,31 @@ export function runRegressionChecks() {
   if (nameOnlyDirectory[0]?.initials_normalised !== "CYM" || mathMatch.status !== "confirmed_exact") {
     throw new Error("Math CYM name-derived matching regression failed");
   }
+
+  const peStaff = [
+    { ...demo.staff[0], id: "fkm", full_name: "Foo Kok Meng", initials_raw: "", initials_normalised: "", email: "nhsfkm@nus.edu.sg", email_username: "nhsfkm" },
+    { ...demo.staff[1], id: "aksy", full_name: "Ang Kai Sheng Yao", initials_raw: "", initials_normalised: "", email: "anhsaksy@nus.edu.sg", email_username: "anhsaksy" },
+    { ...demo.staff[2], id: "dtyy", full_name: "Dora Tan Yee Yin", initials_raw: "", initials_normalised: "", email: "nhsdty@nus.edu.sg", email_username: "nhsdty" },
+    { ...demo.staff[3], id: "dckl", full_name: "Dav Chee Kai Li", initials_raw: "", initials_normalised: "", email: "dav_chee@nus.edu.sg", email_username: "dav_chee" },
+    { ...demo.staff[4], id: "lkf", full_name: "Lim Kai Feng", initials_raw: "", initials_normalised: "", email: "nhslkf@nus.edu.sg", email_username: "nhslkf" },
+    { ...demo.staff[5], id: "llka", full_name: "Lee Li Kai", initials_raw: "", initials_normalised: "", email: "nhsllka@nus.edu.sg", email_username: "nhsllka" },
+  ];
+  for (const code of ["FKM", "AKSY", "DTYY", "DCKL"]) {
+    const result = buildMatches(
+      demo.session.id,
+      [{ ...demo.timetable[0], id: `pe-${code}`, subject_raw: "PE", subject_display: "Physical Education", teacher_initials_raw: code, teacher_initials_normalised: code }],
+      peStaff,
+    )[0];
+    if (result.status !== "confirmed_exact") {
+      throw new Error(`PE alias matching regression failed for ${code}`);
+    }
+  }
+  const klkf = buildMatches(
+    demo.session.id,
+    [{ ...demo.timetable[0], id: "pe-klkf", subject_raw: "PE", subject_display: "Physical Education", teacher_initials_raw: "KLKF", teacher_initials_normalised: "KLKF" }],
+    peStaff,
+  )[0];
+  if (klkf.status !== "confirmed_exact" || !klkf.manual_email?.includes("nhslkf") || !klkf.manual_email?.includes("nhsllka")) {
+    throw new Error("PE KLKF multi-teacher alias regression failed");
+  }
 }

@@ -1,6 +1,14 @@
 import { emailUsername, initialsFromEmailUsername, nameDerivedInitials, normaliseInitials } from "./normalise";
 import type { MatchRecord, StaffRecord, TimetableRecord } from "./types";
 
+const teacherAliasUsernames: Record<string, string[]> = {
+  FKM: ["nhsfkm"],
+  AKSY: ["anhsaksy"],
+  DTYY: ["nhsdty"],
+  DCKL: ["dav_chee"],
+  KLKF: ["nhslkf", "nhsllka"],
+};
+
 function levenshtein(a: string, b: string) {
   const dp = Array.from({ length: a.length + 1 }, (_, i) => [i]);
   for (let j = 1; j <= b.length; j += 1) dp[0][j] = j;
@@ -21,6 +29,32 @@ export function buildMatches(sessionId: string, timetable: TimetableRecord[], st
     const initials = normaliseInitials(record.teacher_initials_normalised || record.teacher_initials_raw);
     const exact = staff.filter((person) => staffInitials(person).includes(initials));
     const singleLetter = initials.length === 1;
+
+    const alias = aliasStaff(initials, staff);
+    if (alias.length === 1) {
+      return base(record, sessionId, index, {
+        staff_record_id: alias[0].id,
+        match_method: "configured_alias",
+        confidence: 1,
+        status: "confirmed_exact",
+      });
+    }
+    if (alias.length > 1) {
+      return base(record, sessionId, index, {
+        staff_record_id: alias[0].id,
+        match_method: "configured_alias",
+        confidence: 1,
+        status: "confirmed_exact",
+        manual_name: alias.map((person) => person.full_name).join(" / "),
+        manual_tel: uniqueJoin(alias.map((person) => person.full_telephone)),
+        manual_email: uniqueJoin(alias.map((person) => person.email)),
+        possible_matches: alias.map((person) => ({
+          staff_record_id: person.id,
+          score: 1,
+          reason: "Configured PE alias",
+        })),
+      });
+    }
 
     if (exact.length === 1 && (!singleLetter || staff.filter((person) => person.initials_normalised === initials).length === 1)) {
       return base(record, sessionId, index, {
@@ -94,6 +128,18 @@ function staffInitials(person: StaffRecord) {
   );
 }
 
+function aliasStaff(initials: string, staff: StaffRecord[]) {
+  const usernames = teacherAliasUsernames[initials] ?? [];
+  return staff.filter((person) => {
+    const username = emailUsername(person.email || person.email_username).toLowerCase();
+    return usernames.includes(username);
+  });
+}
+
+function uniqueJoin(values: string[]) {
+  return Array.from(new Set(values.filter(Boolean))).join(" / ");
+}
+
 function base(
   record: TimetableRecord,
   sessionId: string,
@@ -112,6 +158,9 @@ function base(
     status: values.status ?? "no_match",
     possible_matches: values.possible_matches ?? [],
     manually_confirmed: false,
+    manual_name: values.manual_name,
+    manual_tel: values.manual_tel,
+    manual_email: values.manual_email,
     notes: values.notes ?? null,
   };
 }
