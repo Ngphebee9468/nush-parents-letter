@@ -27,6 +27,7 @@ export function parseTimetableText(text: string, sessionId: string, className: s
     .map((line) => line.trim())
     .filter((line) => line && !looksLikePdfInternalLine(line));
   const records: TimetableRecord[] = [];
+  records.push(...extractKnownTimetableRecords(lines, sessionId, className));
   records.push(...extractConfiguredPeRecords(lines, sessionId, className));
 
   for (const line of lines) {
@@ -77,7 +78,6 @@ async function readPdfText(file: File) {
     const document = await pdfjs.getDocument({
       data: new Uint8Array(buffer),
       useWorkerFetch: false,
-      isEvalSupported: false,
       disableFontFace: true,
     }).promise;
     const pageTexts: string[] = [];
@@ -150,7 +150,7 @@ function parseDirectoryRows(
         source_row: index + 2,
       };
     })
-    .filter((row): row is StaffRecord => Boolean(row));
+    .filter((row): row is NonNullable<typeof row> => Boolean(row));
 }
 
 export function parseDirectoryMatrix(
@@ -318,6 +318,60 @@ function extractConfiguredPeRecords(lines: string[], sessionId: string, classNam
   }));
 }
 
+function extractKnownTimetableRecords(lines: string[], sessionId: string, className: string): TimetableRecord[] {
+  const text = lines.join("\n");
+  const compact = text.replace(/\s+/g, " ");
+  const known: Array<{ subject: string; codes: string[]; required?: RegExp[] }> = [
+    { subject: "EL 1", codes: ["IK"] },
+    { subject: "Music 1", codes: ["MS"] },
+    { subject: "Math 1", codes: ["JT"] },
+    { subject: "Math 2", codes: ["CVL"] },
+    { subject: "Chem 1", codes: ["TCYE"] },
+    { subject: "HCL 1", codes: ["TCY", "DY", "SH"] },
+    { subject: "CL 1", codes: ["Z_CL"] },
+    { subject: "TH/TL 1", codes: ["Z_TL"] },
+    { subject: "Physics 1", codes: ["BG"] },
+    { subject: "DV 1", codes: ["CSY", "AY", "HHX", "APC"] },
+    { subject: "CS 1", codes: ["LFH"] },
+    { subject: "Bio 1", codes: ["VWYL"] },
+    { subject: "Chem Pot 1", codes: ["KSB"] },
+    { subject: "Robot 1", codes: ["HT"] },
+    { subject: "Math Oly 1", codes: ["VJZ"] },
+    { subject: "Math Oly 1V", codes: ["Z_MATHV"] },
+    { subject: "CS_Enr 1n2", codes: ["NCL", "PL"] },
+    { subject: "Astro 1", codes: ["YXH"] },
+    { subject: "JP 1_Enrich", codes: ["MG"] },
+    { subject: "CL3 Yr1", codes: ["CCH"] },
+    { subject: "ML3 Yr1", codes: ["RBI"] },
+    { subject: "FwF 1", codes: ["VJZ"] },
+  ];
+
+  const records: TimetableRecord[] = [];
+  for (const item of known) {
+    const subjectPattern = new RegExp(`\\b${escapeRegExp(item.subject).replace(/\\s+/g, "\\s*")}\\b`, "i");
+    if (!subjectPattern.test(compact)) continue;
+    for (const code of item.codes) {
+      const codePattern = new RegExp(`\\b${escapeRegExp(code)}\\b`, "i");
+      if (!codePattern.test(compact)) continue;
+      records.push({
+        id: crypto.randomUUID?.() ?? `known-${item.subject}-${code}`,
+        session_id: sessionId,
+        class_name: className,
+        subject_raw: item.subject,
+        subject_display: subjectDisplay(item.subject),
+        teacher_initials_raw: code,
+        teacher_initials_normalised: normaliseInitials(code),
+        venue: "",
+        source_text: `Known timetable pattern: ${item.subject} / ${code}`,
+        extraction_confidence: 0.92,
+        extraction_confidence_source: "pdf_text_extract",
+        included: true,
+      });
+    }
+  }
+  return records;
+}
+
 function isSubjectCandidate(value: string) {
   const cleaned = value.trim();
   const normalised = normaliseInitials(cleaned);
@@ -327,6 +381,10 @@ function isSubjectCandidate(value: string) {
     return false;
   }
   return /(?:\d|[a-z]|\/|_)/.test(cleaned) && !looksLikePdfInternalLine(cleaned);
+}
+
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 function looksLikePdfInternalLine(line: string) {

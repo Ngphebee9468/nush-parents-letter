@@ -3,10 +3,27 @@ import type { MatchRecord, StaffRecord, TimetableRecord } from "./types";
 
 const teacherAliasUsernames: Record<string, string[]> = {
   FKM: ["nhsfkm"],
+  AKS: ["anhsaksy"],
   AKSY: ["anhsaksy"],
+  DTY: ["nhsdty", "nhsndty"],
   DTYY: ["nhsdty", "nhsndty"],
+  DCKI: ["dav_chee"],
   DCKL: ["dav_chee"],
   KLKF: ["nhslkf", "nhsllka"],
+};
+
+const teacherAliasFallback: Record<string, Array<{ name: string; tel: string; email: string }>> = {
+  FKM: [{ name: "Mr Fan Kai Ming", tel: "6516 1730", email: "nhsfkm@nus.edu.sg" }],
+  AKS: [{ name: "Mdm Kong Seow Yoke Annie", tel: "6601 8089", email: "anhsaksy@nus.edu.sg" }],
+  AKSY: [{ name: "Mdm Kong Seow Yoke Annie", tel: "6601 8089", email: "anhsaksy@nus.edu.sg" }],
+  DTY: [{ name: "Mr Norman Dominique Tse Y-Yin", tel: "6601 2638", email: "nhsndty@nus.edu.sg" }],
+  DTYY: [{ name: "Mr Norman Dominique Tse Y-Yin", tel: "6601 2638", email: "nhsndty@nus.edu.sg" }],
+  DCKI: [{ name: "Mr Chee Kok Liang David", tel: "6516 1991", email: "dav_chee@nus.edu.sg" }],
+  DCKL: [{ name: "Mr Chee Kok Liang David", tel: "6516 1991", email: "dav_chee@nus.edu.sg" }],
+  KLKF: [
+    { name: "Mr Loke Kok Fei Keefe", tel: "6601 1914", email: "nhslkf@nus.edu.sg" },
+    { name: "Ms Loh Lai Kiang Angela", tel: "6516 2408", email: "nhsllka@nus.edu.sg" },
+  ],
 };
 
 function levenshtein(a: string, b: string) {
@@ -53,6 +70,19 @@ export function buildMatches(sessionId: string, timetable: TimetableRecord[], st
           score: 1,
           reason: "Configured PE alias",
         })),
+      });
+    }
+
+    const fallback = teacherAliasFallback[initials] ?? [];
+    if (fallback.length > 0) {
+      return base(record, sessionId, index, {
+        staff_record_id: null,
+        match_method: "configured_alias",
+        confidence: 0.99,
+        status: "confirmed_exact",
+        manual_name: fallback.map((person) => person.name).join(" / "),
+        manual_tel: uniqueJoin(fallback.map((person) => person.tel)),
+        manual_email: uniqueJoin(fallback.map((person) => person.email)),
       });
     }
 

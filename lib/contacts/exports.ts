@@ -11,10 +11,10 @@ export type ExportRow = {
 export function previewRows(data: AppData): ExportRow[] {
   return data.timetable
     .filter((record) => record.included)
-    .map((record) => {
+    .flatMap((record) => {
       const match = data.matches.find((item) => item.timetable_record_id === record.id);
       const staff = match?.staff_record_id ? data.staff.find((item) => item.id === match.staff_record_id) : undefined;
-      return rowFrom(record, match, staff);
+      return rowsFrom(record, match, staff);
     });
 }
 
@@ -99,6 +99,22 @@ export async function copyHtml(rows: ExportRow[]) {
   ]);
 }
 
+function rowsFrom(record: TimetableRecord, match?: MatchRecord, staff?: StaffRecord): ExportRow[] {
+  const names = splitJoined(match?.manual_name);
+  const tels = splitJoined(match?.manual_tel);
+  const emails = splitJoined(match?.manual_email);
+  if (names.length > 1 || tels.length > 1 || emails.length > 1) {
+    const count = Math.max(names.length, tels.length, emails.length);
+    return Array.from({ length: count }, (_, index) => ({
+      Subject: record.subject_display || record.subject_raw,
+      Teacher: names[index] ?? names[0] ?? "",
+      "Tel. No.": tels[index] ?? tels[0] ?? "",
+      "Email Address": emails[index] ?? emails[0] ?? "",
+    }));
+  }
+  return [rowFrom(record, match, staff)];
+}
+
 function rowFrom(record: TimetableRecord, match?: MatchRecord, staff?: StaffRecord): ExportRow {
   return {
     Subject: record.subject_display || record.subject_raw,
@@ -106,6 +122,10 @@ function rowFrom(record: TimetableRecord, match?: MatchRecord, staff?: StaffReco
     "Tel. No.": match?.manual_tel || staff?.full_telephone || "",
     "Email Address": match?.manual_email || staff?.email || "",
   };
+}
+
+function splitJoined(value: string | undefined) {
+  return value?.split(/\s+\/\s+/).map((item) => item.trim()).filter(Boolean) ?? [];
 }
 
 function sanitiseRow(row: ExportRow): ExportRow {

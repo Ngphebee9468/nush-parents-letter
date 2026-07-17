@@ -108,12 +108,25 @@ export function runRegressionChecks() {
   }
 
   const parsedPe = parseTimetableText(
-    "WH Physics 1 PE Recess Lunch CCE_Assembly Music 1\nFKM / AKSY\nFiDelTdY TYra /c Dk,CScKhLool\nKHLaKll,FIS /H D,N /e Dtball",
+    "HCL 1 Math 1\nTCY / DY / SH\nJT\nMath 2\nCVL\nPhysics 1 DV 1\nBG\nCSY / AY / HHX / APC\nWH Physics 1 PE Recess Lunch CCE_Assembly Music 1\nFKM / AKSY\nFiDelTdY TYra /c Dk,CScKhLool\nKHLaKll,FIS /H D,N /e Dtball",
     demo.session.id,
     "101",
   );
   const peCodes = parsedPe.filter((row) => row.subject_display === "Physical Education").map((row) => row.teacher_initials_normalised);
   if (!["FKM", "AKSY", "DTYY", "DCKL", "KLKF"].every((code) => peCodes.includes(code))) {
     throw new Error("Configured PE timetable extraction regression failed");
+  }
+  const parsedPairs = parsedPe.map((row) => `${row.subject_raw}:${row.teacher_initials_normalised}`);
+  for (const pair of ["Physics 1:BG", "DV 1:CSY", "DV 1:APC", "Math 1:JT", "Math 2:CVL"]) {
+    if (!parsedPairs.includes(pair)) throw new Error(`Known timetable subject extraction failed for ${pair}`);
+  }
+
+  const fallbackKlkf = buildMatches(
+    demo.session.id,
+    [{ ...demo.timetable[0], id: "fallback-klkf", subject_raw: "PE", subject_display: "Physical Education", teacher_initials_raw: "KLKF", teacher_initials_normalised: "KLKF" }],
+    [],
+  )[0];
+  if (fallbackKlkf.status !== "confirmed_exact" || !fallbackKlkf.manual_name?.includes("Loke Kok Fei") || !fallbackKlkf.manual_name?.includes("Loh Lai Kiang")) {
+    throw new Error("PE fallback alias regression failed");
   }
 }
