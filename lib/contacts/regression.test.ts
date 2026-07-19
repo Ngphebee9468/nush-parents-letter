@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildMatches } from "./matching";
-import { normaliseTelephone } from "./normalise";
+import { normaliseTelephone, subjectDisplay } from "./normalise";
 import { parseDirectoryMatrix, parseTimetableText } from "./parse";
 import { runRegressionChecks } from "./tests";
 import { previewRows } from "./exports";
@@ -45,6 +45,66 @@ describe("contact generator regressions", () => {
       expect.arrayContaining(["Math 1:JT", "Math 2:CVL", "Physics 1:BG", "DV 1:CSY", "DV 1:APC", "Bio Oly 2:VLSF", "Bio Oly 2:KF", "PE:FKM", "PE:KLKF"]),
     );
     expect(rows.map((row) => row.teacher_initials_normalised)).not.toContain("ZMATHV");
+  });
+
+  it("extracts class 203 Year 2 rows, including glued Bio Oly and enrichment text", () => {
+    const rows = parseTimetableText(
+      [
+        "203",
+        "HCL 2 Math 2 PE Recess Lunch Bio 2 Hum 2",
+        "WJ / SH / HKK CVL VLSF IP",
+        "CL 2 DTYY / DCKL / TSF",
+        "TH/TL 2 Z_TL2",
+        "Chem 2 EL 2 HHX PL",
+        "Physics 2 Geog 2 DV JM 2 CSKS / LYH / BG RYIC / IP",
+        "Hist 2 CB / PHPS",
+        "Eng Lit 2 DWSP DV JSR 2 AY / YT",
+        "Music 2 MS DV JMR 2 RCMH / JYHM / CYM",
+        "CS 2 LD Math Oly 2 LCL Math Oly 2ZV_MathV",
+        "Chem Oly 2 JJPM Phys Oly 2 PBH Chem Pot 2GTYM",
+        "CS_Enr 1n2NCL / PL Bio Oly 2VLSF / KF",
+      ].join("\n"),
+      "session",
+      "203",
+    );
+    expect(rows.map((row) => `${row.subject_raw}:${row.teacher_initials_normalised}`)).toEqual(
+      expect.arrayContaining([
+        "Math 2:CVL",
+        "HCL 2:WJ",
+        "CL 2:TSF",
+        "Chem 2:HHX",
+        "EL 2:PL",
+        "Physics 2:LYH",
+        "Geog 2:RYIC",
+        "DV JM 2:CSKS",
+        "DV JMR 2:CYM",
+        "CS 2:LD",
+        "Chem Pot 2:GTYM",
+        "CS_Enr 1n2:PL",
+        "Bio Oly 2:VLSF",
+        "Bio Oly 2:KF",
+      ]),
+    );
+    expect(rows.map((row) => row.teacher_initials_normalised)).not.toContain("ZMATHV");
+  });
+
+  it("displays user-facing subject names from year-based timetable codes", () => {
+    expect(subjectDisplay("Bio Oly 2VLSF")).toBe("Bio Oly 2");
+    expect(subjectDisplay("Math 2")).toBe("Year 2 Math");
+    expect(subjectDisplay("EL2")).toBe("Year 2 English");
+    expect(subjectDisplay("Hum 1")).toBe("Year 1 Humanities");
+    expect(subjectDisplay("Physics 3")).toBe("Year 3 Physics");
+    expect(subjectDisplay("CS 2")).toBe("Year 2 Computer Science");
+    expect(subjectDisplay("Bio 6")).toBe("Biology");
+    expect(subjectDisplay("BL 2")).toBe("Year 2 Biology");
+    expect(subjectDisplay("DV JM 2")).toBe("Da Vinci Junior Science Maker");
+    expect(subjectDisplay("DV JSR")).toBe("Da Vinci Junior Science Research");
+    expect(subjectDisplay("CL3 Yr2")).toBe("Year 2 Chinese");
+    expect(subjectDisplay("ML3 Yr3")).toBe("Year 3 Malay");
+    expect(subjectDisplay("Geog 2")).toBe("Year 2 Geography");
+    expect(subjectDisplay("Hist 2")).toBe("Year 2 History");
+    expect(subjectDisplay("Eng Lit 2")).toBe("Year 2 English Literature");
+    expect(subjectDisplay("Music 2")).toBe("Year 2 Music");
   });
 
   it("renders PE multi-teacher contact rows like the requested table", () => {

@@ -62,6 +62,13 @@ export function safeExportCell(value: string | null | undefined) {
 }
 
 export function subjectDisplay(subject: string) {
+  const cleaned = subject
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/^(Bio Oly \d+)[A-Z]{2,5}$/i, "$1")
+    .replace(/^(CS_Enr 1n2)[A-Z]{2,5}$/i, "$1")
+    .replace(/^(Chem Pot \d+)[A-Z]{2,5}$/i, "$1");
+  const upper = cleaned.toUpperCase();
   const map: Record<string, string> = {
     "ELC 6": "English Language and Communication",
     "EL 6": "English Language",
@@ -70,6 +77,33 @@ export function subjectDisplay(subject: string) {
     "PHYS HON 6": "Physics Honours",
     "CHEM HON 6": "Chemistry Honours",
     "PE": "Physical Education",
+    "DV JM": "Da Vinci Junior Science Maker",
+    "DV JSR": "Da Vinci Junior Science Research",
+    "DV JMR": "Da Vinci Junior Math Research",
   };
-  return map[subject.toUpperCase()] ?? subject;
+  if (map[upper]) return map[upper];
+
+  const yearSubject = (label: string) => {
+    const match = upper.match(/^(.+?)\s*(\d)$/);
+    if (!match) return null;
+    return `Year ${match[2]} ${label}`;
+  };
+
+  if (/^MATH\s*\d$/.test(upper)) return yearSubject("Math") ?? cleaned;
+  if (/^EL\s*\d$/.test(upper) || /^EL\d$/.test(upper)) return yearSubject("English") ?? cleaned;
+  if (/^HUM\s*\d$/.test(upper)) return yearSubject("Humanities") ?? cleaned;
+  if (/^PHYSICS\s*\d$/.test(upper)) return yearSubject("Physics") ?? cleaned;
+  if (/^CS\s*\d$/.test(upper)) return yearSubject("Computer Science") ?? cleaned;
+  if (/^(BIO|BL)\s*\d$/.test(upper)) return `Year ${upper.match(/\d$/)?.[0]} Biology`;
+  if (/^CL3\s*YR\s*\d$/.test(upper) || /^CL\s*\d$/.test(upper)) return `Year ${upper.match(/\d$/)?.[0]} Chinese`;
+  if (/^ML3\s*YR\s*\d$/.test(upper) || /^ML\s*\d$/.test(upper)) return `Year ${upper.match(/\d$/)?.[0]} Malay`;
+  if (/^GEOG\s*\d$/.test(upper)) return yearSubject("Geography") ?? cleaned;
+  if (/^HIST\s*\d$/.test(upper)) return yearSubject("History") ?? cleaned;
+  if (/^ENG LIT\s*\d$/.test(upper)) return yearSubject("English Literature") ?? cleaned;
+  if (/^MUSIC\s*\d$/.test(upper)) return yearSubject("Music") ?? cleaned;
+  if (/^DV\s*JM\s*\d?$/.test(upper)) return "Da Vinci Junior Science Maker";
+  if (/^DV\s*JSR\s*\d?$/.test(upper)) return "Da Vinci Junior Science Research";
+  if (/^DV\s*JMR\s*\d?$/.test(upper)) return "Da Vinci Junior Math Research";
+
+  return cleaned;
 }

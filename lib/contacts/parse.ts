@@ -31,6 +31,7 @@ export function parseTimetableText(text: string, sessionId: string, className: s
   records.push(...extractConfiguredPeRecords(lines, sessionId, className));
 
   for (const line of lines) {
+    if (looksLikePackedTimetableLine(line)) continue;
     const parts = line.split(/\s*[/|]\s*/).filter(Boolean);
     const tokens = parts.length > 1 ? parts : line.split(/\s{2,}/).filter(Boolean);
     const initials = tokens.find((token) => {
@@ -327,31 +328,55 @@ function extractKnownTimetableRecords(lines: string[], sessionId: string, classN
     { subject: "Math 1", codes: ["JT"] },
     { subject: "Math 2", codes: ["CVL"] },
     { subject: "Chem 1", codes: ["TCYE"] },
+    { subject: "Chem 2", codes: ["HHX"] },
     { subject: "HCL 1", codes: ["TCY", "DY", "SH"] },
+    { subject: "HCL 2", codes: ["WJ", "SH", "HKK"] },
     { subject: "CL 1", codes: ["Z_CL"] },
+    { subject: "CL 2", codes: ["TSF"] },
     { subject: "TH/TL 1", codes: ["Z_TL"] },
+    { subject: "TH/TL 2", codes: ["Z_TL2"] },
     { subject: "Physics 1", codes: ["BG"] },
+    { subject: "Physics 2", codes: ["CSKS", "LYH", "BG"] },
     { subject: "DV 1", codes: ["CSY", "AY", "HHX", "APC"] },
+    { subject: "DV JM 2", codes: ["CSKS", "LYH", "BG"] },
+    { subject: "DV JSR 2", codes: ["AY", "YT"] },
+    { subject: "DV JMR 2", codes: ["RCMH", "JYHM", "CYM"] },
     { subject: "CS 1", codes: ["LFH"] },
+    { subject: "CS 2", codes: ["LD"] },
     { subject: "Bio 1", codes: ["VWYL"] },
+    { subject: "Bio 2", codes: ["VLSF"] },
     { subject: "Bio Oly 2", codes: ["VLSF", "KF"] },
     { subject: "Chem Pot 1", codes: ["KSB"] },
+    { subject: "Chem Pot 2", codes: ["GTYM"] },
     { subject: "Robot 1", codes: ["HT"] },
+    { subject: "Robotics 2", codes: ["HT"] },
     { subject: "Math Oly 1", codes: ["VJZ"] },
+    { subject: "Math Oly 2", codes: ["LCL"] },
+    { subject: "Chem Oly 2", codes: ["JJPM"] },
+    { subject: "Phys Oly 2", codes: ["PBH"] },
     { subject: "CS_Enr 1n2", codes: ["NCL", "PL"] },
     { subject: "Astro 1", codes: ["YXH"] },
     { subject: "JP 1_Enrich", codes: ["MG"] },
     { subject: "CL3 Yr1", codes: ["CCH"] },
+    { subject: "CL3 Yr2", codes: ["HKK"] },
     { subject: "ML3 Yr1", codes: ["RBI"] },
+    { subject: "ML3 Yr2", codes: ["RBI"] },
+    { subject: "EL 2", codes: ["PL"] },
+    { subject: "Hum 2", codes: ["IP"] },
+    { subject: "Geog 2", codes: ["RYIC", "IP"] },
+    { subject: "Hist 2", codes: ["CB", "PHPS"] },
+    { subject: "Eng Lit 2", codes: ["DWSP"] },
+    { subject: "Music 2", codes: ["MS"] },
     { subject: "FwF 1", codes: ["VJZ"] },
   ];
 
   const records: TimetableRecord[] = [];
   for (const item of known) {
-    const subjectPattern = new RegExp(`\\b${escapeRegExp(item.subject).replace(/\\s+/g, "\\s*")}\\b`, "i");
+    const subjectPattern = new RegExp(`\\b${escapeRegExp(item.subject).replace(/\\s+/g, "\\s*")}(?=\\s|[A-Z_/]|$)`, "i");
     if (!subjectPattern.test(compact)) continue;
     for (const code of item.codes) {
-      const codePattern = new RegExp(`\\b${escapeRegExp(code)}\\b`, "i");
+      const escapedCode = escapeRegExp(code);
+      const codePattern = new RegExp(`(?:^|[^A-Z0-9])${escapedCode}(?=$|[^A-Z0-9])|\\d${escapedCode}(?=$|[^A-Z0-9])`, "i");
       if (!codePattern.test(compact)) continue;
       records.push({
         id: crypto.randomUUID?.() ?? `known-${item.subject}-${code}`,
@@ -381,6 +406,12 @@ function isSubjectCandidate(value: string) {
     return false;
   }
   return /(?:\d|[a-z]|\/|_)/.test(cleaned) && !looksLikePdfInternalLine(cleaned);
+}
+
+function looksLikePackedTimetableLine(line: string) {
+  if (!line.includes("/")) return false;
+  const subjectHits = line.match(/\b(?:Math|Chem|HCL|CL|TH\/TL|Physics|DV|CS|Bio|Robot|Robotics|Geog|Hist|Eng Lit|Music|PE|Oly)\s*[\w/]*\d?/gi);
+  return (subjectHits?.length ?? 0) > 0;
 }
 
 function escapeRegExp(value: string) {
