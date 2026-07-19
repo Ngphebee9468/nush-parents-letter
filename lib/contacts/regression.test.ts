@@ -88,6 +88,20 @@ describe("contact generator regressions", () => {
     expect(rows.map((row) => row.teacher_initials_normalised)).not.toContain("ZMATHV");
   });
 
+  it("ignores code-only PDF noise instead of creating fake SLRKH subjects", () => {
+    const rows = parseTimetableText(
+      [
+        "DZVJ J/ SLRKH 2 / LLC / DYSY / GTYM / VLSF / THC /",
+        "D4-05A,YD 4/ -Y0T6",
+        "DZVJ J/ SLRKH 2 / LLC / DYSY / GTYM / VLSF / THC /",
+        "D4-05A,YD 4/ -Y0T6",
+      ].join("\n"),
+      "session",
+      "203",
+    );
+    expect(rows).toEqual([]);
+  });
+
   it("displays user-facing subject names from year-based timetable codes", () => {
     expect(subjectDisplay("Bio Oly 2VLSF")).toBe("Bio Oly 2");
     expect(subjectDisplay("Math 2")).toBe("Year 2 Math");

@@ -31,7 +31,7 @@ export function parseTimetableText(text: string, sessionId: string, className: s
   records.push(...extractConfiguredPeRecords(lines, sessionId, className));
 
   for (const line of lines) {
-    if (looksLikePackedTimetableLine(line)) continue;
+    if (looksLikePackedTimetableLine(line) || looksLikeCodeOnlyTimetableNoise(line)) continue;
     const parts = line.split(/\s*[/|]\s*/).filter(Boolean);
     const tokens = parts.length > 1 ? parts : line.split(/\s{2,}/).filter(Boolean);
     const initials = tokens.find((token) => {
@@ -412,6 +412,19 @@ function looksLikePackedTimetableLine(line: string) {
   if (!line.includes("/")) return false;
   const subjectHits = line.match(/\b(?:Math|Chem|HCL|CL|TH\/TL|Physics|DV|CS|Bio|Robot|Robotics|Geog|Hist|Eng Lit|Music|PE|Oly)\s*[\w/]*\d?/gi);
   return (subjectHits?.length ?? 0) > 0;
+}
+
+function looksLikeCodeOnlyTimetableNoise(line: string) {
+  const parts = line.split(/\s*[/|]\s*/).map((part) => part.trim()).filter(Boolean);
+  if (parts.length < 4) return false;
+  const hasKnownSubject = /\b(?:Math|Chem|HCL|CL|TH\/TL|Physics|DV|CS|Bio|Robot|Robotics|Geog|Hist|Eng Lit|Music|PE|Hum|Oly)\b/i.test(line);
+  if (hasKnownSubject) return false;
+  const codeLikeParts = parts.filter((part) => {
+    const letters = part.replace(/[^A-Za-z]/g, "");
+    const digits = part.replace(/\D/g, "");
+    return (letters.length >= 2 && letters.length <= 6 && letters.toUpperCase() === letters) || Boolean(digits);
+  });
+  return codeLikeParts.length / parts.length >= 0.7;
 }
 
 function escapeRegExp(value: string) {
