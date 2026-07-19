@@ -110,7 +110,7 @@ describe("contact generator regressions", () => {
   it("matches Year 2 Music MS to Dr Mark Sim from the staff directory username", () => {
     const demo = demoData();
     const staff = parseDirectoryMatrix(
-      [["S/N", "Name", "Ext", "Mobile", "Email"], ["1", "Dr Mark Sim, Teacher", "61234", "", "drmarksim"]],
+      [["S/N", "Name", "Ext", "Mobile", "Email"], ["1", "Dr Sim Li Kern, Mark (Adjunct Teacher)", "64002", "", "drmarksim"]],
       "session",
       "Staff",
       { tel6: "6516", tel1: "6601" },
@@ -127,7 +127,25 @@ describe("contact generator regressions", () => {
     ];
     const data = { ...demo, timetable, staff, matches: buildMatches(demo.session.id, timetable, staff) };
     expect(previewRows(data)).toEqual([
-      { Subject: "Year 2 Music", Teacher: "Dr Mark Sim", "Tel. No.": "6516 1234", "Email Add.": "drmarksim@nus.edu.sg" },
+      { Subject: "Year 2 Music", Teacher: "Dr Sim Li Kern, Mark (adjunct Teacher)", "Tel. No.": "6516 4002", "Email Add.": "drmarksim@nus.edu.sg" },
+    ]);
+  });
+
+  it("fills Music MS from the configured fallback when the directory row is unavailable", () => {
+    const demo = demoData();
+    const timetable = [
+      {
+        ...demo.timetable[0],
+        id: "music-ms-fallback",
+        subject_raw: "Music 2",
+        subject_display: "Year 2 Music",
+        teacher_initials_raw: "MS",
+        teacher_initials_normalised: "MS",
+      },
+    ];
+    const data = { ...demo, timetable, staff: [], matches: buildMatches(demo.session.id, timetable, []) };
+    expect(previewRows(data)).toEqual([
+      { Subject: "Year 2 Music", Teacher: "Dr Sim Li Kern, Mark", "Tel. No.": "6516 4002", "Email Add.": "drmarksim@nus.edu.sg" },
     ]);
   });
 
