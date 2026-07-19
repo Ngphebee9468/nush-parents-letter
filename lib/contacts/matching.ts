@@ -3,6 +3,7 @@ import type { MatchRecord, StaffRecord, TimetableRecord } from "./types";
 
 const teacherAliasUsernames: Record<string, string[]> = {
   IK: ["nhski"],
+  MS: ["drmarksim"],
   JT: ["nhsscl"],
   CVL: ["nhscvl"],
   TCYE: ["anhstcye"],
@@ -55,7 +56,7 @@ const teacherAliasUsernames: Record<string, string[]> = {
 
 const teacherAliasFallback: Record<string, Array<{ name: string; tel: string; email: string }>> = {
   IK: [{ name: "Ms Koo Ivy", tel: "6516 7298", email: "nhski@nus.edu.sg" }],
-  MS: [{ name: "Unverified code MS", tel: "", email: "" }],
+  MS: [{ name: "Dr Mark Sim", tel: "", email: "drmarksim@nus.edu.sg" }],
   JT: [{ name: "Ms Seow Chwee Loon Joyce", tel: "6516 1724", email: "nhsscl@nus.edu.sg" }],
   CVL: [{ name: "Mr Chia Vui Leong", tel: "6516 1728", email: "nhscvl@nus.edu.sg" }],
   TCYE: [{ name: "Mr Choo Yi En Theodore", tel: "6516 5368", email: "anhstcye@nus.edu.sg" }],

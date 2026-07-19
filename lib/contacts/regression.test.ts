@@ -107,6 +107,30 @@ describe("contact generator regressions", () => {
     expect(subjectDisplay("Music 2")).toBe("Year 2 Music");
   });
 
+  it("matches Year 2 Music MS to Dr Mark Sim from the staff directory username", () => {
+    const demo = demoData();
+    const staff = parseDirectoryMatrix(
+      [["S/N", "Name", "Ext", "Mobile", "Email"], ["1", "Dr Mark Sim, Teacher", "61234", "", "drmarksim"]],
+      "session",
+      "Staff",
+      { tel6: "6516", tel1: "6601" },
+    );
+    const timetable = [
+      {
+        ...demo.timetable[0],
+        id: "music-ms",
+        subject_raw: "Music 2",
+        subject_display: "Year 2 Music",
+        teacher_initials_raw: "MS",
+        teacher_initials_normalised: "MS",
+      },
+    ];
+    const data = { ...demo, timetable, staff, matches: buildMatches(demo.session.id, timetable, staff) };
+    expect(previewRows(data)).toEqual([
+      { Subject: "Year 2 Music", Teacher: "Dr Mark Sim", "Tel. No.": "6516 1234", "Email Add.": "drmarksim@nus.edu.sg" },
+    ]);
+  });
+
   it("renders PE multi-teacher contact rows like the requested table", () => {
     const demo = demoData();
     const timetable = [
