@@ -102,6 +102,32 @@ describe("contact generator regressions", () => {
     expect(rows).toEqual([]);
   });
 
+  it("extracts the full DV JSR 2 teacher group from the timetable block", () => {
+    const demo = demoData();
+    const timetable = parseTimetableText(
+      "DV JSR 2\nZJ / LKH / LLC / DYSY / GTYM / VLSF / THC /\nAY / YT\nD4-05,D4-06,D4-07,D4-08,D4-16",
+      demo.session.id,
+      "203",
+    ).filter((row) => row.subject_raw === "DV JSR 2");
+    expect(timetable.map((row) => row.teacher_initials_normalised)).toEqual(
+      expect.arrayContaining(["ZJ", "LKH", "LLC", "DYSY", "GTYM", "VLSF", "THC", "AY", "YT"]),
+    );
+    expect(timetable.map((row) => row.teacher_initials_normalised)).not.toContain("ZK");
+
+    const data = { ...demo, timetable, staff: [], matches: buildMatches(demo.session.id, timetable, []) };
+    expect(previewRows(data)).toEqual([
+      { Subject: "Da Vinci Junior Science Research", Teacher: "Ms Zhong Jingyi", "Tel. No.": "6601 2721", "Email Add.": "nhszj@nus.edu.sg" },
+      { Subject: "", Teacher: "Mr Lee Kim Hun", "Tel. No.": "6516 8213", "Email Add.": "nhslkh@nus.edu.sg" },
+      { Subject: "", Teacher: "Ms Lim Li Chen", "Tel. No.": "6516 1736", "Email Add.": "nhsllc@nus.edu.sg" },
+      { Subject: "", Teacher: "Mr Yeo Shyh Yuan Don", "Tel. No.": "6516 1721", "Email Add.": "nhsysy@nus.edu.sg" },
+      { Subject: "", Teacher: "Mrs Khoo-Teo Yew Mei Grace", "Tel. No.": "6601 2096", "Email Add.": "nhstymg@nus.edu.sg" },
+      { Subject: "", Teacher: "Ms Lim Suat Fong Valerie", "Tel. No.": "6516 7301", "Email Add.": "nhslsf@nus.edu.sg" },
+      { Subject: "", Teacher: "Dr Tang Hock Chun", "Tel. No.": "6516 8639", "Email Add.": "nhsthc@nus.edu.sg" },
+      { Subject: "", Teacher: "Dr Yoanna Arlina Kurnianingsih", "Tel. No.": "6516 1508", "Email Add.": "yak@nus.edu.sg" },
+      { Subject: "", Teacher: "Ms Tang Yee Voon", "Tel. No.": "6516 3593", "Email Add.": "anhsyvtang@nus.edu.sg" },
+    ]);
+  });
+
   it("displays user-facing subject names from year-based timetable codes", () => {
     expect(subjectDisplay("Bio Oly 2VLSF")).toBe("Bio Oly 2");
     expect(subjectDisplay("Math 2")).toBe("Year 2 Math");

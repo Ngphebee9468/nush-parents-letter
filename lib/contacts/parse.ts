@@ -339,7 +339,7 @@ function extractKnownTimetableRecords(lines: string[], sessionId: string, classN
     { subject: "Physics 2", codes: ["CSKS", "LYH", "BG"] },
     { subject: "DV 1", codes: ["CSY", "AY", "HHX", "APC"] },
     { subject: "DV JM 2", codes: ["CSKS", "LYH", "BG"] },
-    { subject: "DV JSR 2", codes: ["AY", "YT"] },
+    { subject: "DV JSR 2", codes: ["ZJ", "ZK", "LKH", "LLC", "DYSY", "GTYM", "VLSF", "THC", "AY", "YT"] },
     { subject: "DV JMR 2", codes: ["RCMH", "JYHM", "CYM"] },
     { subject: "CS 1", codes: ["LFH"] },
     { subject: "CS 2", codes: ["LD"] },
