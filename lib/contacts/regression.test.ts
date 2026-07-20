@@ -140,6 +140,7 @@ describe("contact generator regressions", () => {
         "CS Oly 3 LD Com 2 Robotics 3 YW",
         "Music 3 PE Recess EL 3 Math 3 Lunch Bio 3 Chem 3",
         "MS JTYH LKL DYSY Eng Lit 3 EV EL Bridge 3APC",
+        "Robotics 3 YW Phy Lab 3 Bio Oly 3 NOH / FKC / RSKH",
         "Math 4 LCL Math 5 LCH",
       ].join("\n"),
       demo.session.id,
@@ -157,6 +158,9 @@ describe("contact generator regressions", () => {
         "Phys Oly 3:YW",
         "CS Oly 3:LD",
         "Robotics 3:YW",
+        "Bio Oly 3:NOH",
+        "Bio Oly 3:FKC",
+        "Bio Oly 3:RSKH",
         "Music 3:MS",
         "Bio 3:LKL",
         "Chem 3:DYSY",
@@ -173,6 +177,7 @@ describe("contact generator regressions", () => {
       { Subject: "Year 3 Math", Teacher: "Mr Teoh Yeow Hwee Joel", "Tel. No.": "6601 3237", "Email Add.": "nhstyhj@nus.edu.sg" },
       { Subject: "Year 4 Math", Teacher: "Dr Lee Chan Lye", "Tel. No.": "6516 7302", "Email Add.": "nhslcl@nus.edu.sg" },
       { Subject: "Year 5 Math", Teacher: "Mr Low Chin Han", "Tel. No.": "6516 7300", "Email Add.": "nhslch@nus.edu.sg" },
+      { Subject: "Bio Oly 3", Teacher: "Ms Ng Oon Hui Phebee", "Tel. No.": "6516 1722", "Email Add.": "nhsnoh@nus.edu.sg" },
       { Subject: "Year 3 Computer Science", Teacher: "Mr Chua Eng Siong Claude", "Tel. No.": "6516 5247", "Email Add.": "nhscesc@nus.edu.sg" },
       { Subject: "Year 3 Music", Teacher: "Dr Sim Li Kern, Mark", "Tel. No.": "6516 4002", "Email Add.": "drmarksim@nus.edu.sg" },
     ]));
@@ -186,6 +191,7 @@ describe("contact generator regressions", () => {
     expect(subjectDisplay("Math 5")).toBe("Year 5 Math");
     expect(subjectDisplay("EL2")).toBe("Year 2 English");
     expect(subjectDisplay("Hum 1")).toBe("Year 1 Humanities");
+    expect(subjectDisplay("Chem 3")).toBe("Year 3 Chemistry");
     expect(subjectDisplay("Physics 3")).toBe("Year 3 Physics");
     expect(subjectDisplay("CS 2")).toBe("Year 2 Computer Science");
     expect(subjectDisplay("Bio 6")).toBe("Biology");

@@ -92,6 +92,7 @@ export function subjectDisplay(subject: string) {
   if (/^MATH\s*\d$/.test(upper)) return yearSubject("Math") ?? cleaned;
   if (/^EL\s*\d$/.test(upper) || /^EL\d$/.test(upper)) return yearSubject("English") ?? cleaned;
   if (/^HUM\s*\d$/.test(upper)) return yearSubject("Humanities") ?? cleaned;
+  if (/^CHEM\s*\d$/.test(upper)) return yearSubject("Chemistry") ?? cleaned;
   if (/^PHYSICS\s*\d$/.test(upper)) return yearSubject("Physics") ?? cleaned;
   if (/^CS\s*\d$/.test(upper)) return yearSubject("Computer Science") ?? cleaned;
   if (/^(BIO|BL)\s*\d$/.test(upper)) return `Year ${upper.match(/\d$/)?.[0]} Biology`;

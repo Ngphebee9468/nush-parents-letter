@@ -356,7 +356,7 @@ function extractKnownTimetableRecords(lines: string[], sessionId: string, classN
     { subject: "Bio 2", codes: ["VLSF"] },
     { subject: "Bio 3", codes: ["LKL"] },
     { subject: "Bio Oly 2", codes: ["VLSF", "KF"] },
-    { subject: "Bio Oly 3", codes: ["NOOH", "FKC", "RSK", "RSKH"] },
+    { subject: "Bio Oly 3", codes: ["NOH", "NOOH", "FKC", "RSK", "RSKH"] },
     { subject: "Chem Pot 1", codes: ["KSB"] },
     { subject: "Chem Pot 2", codes: ["GTYM"] },
     { subject: "Robot 1", codes: ["HT"] },
