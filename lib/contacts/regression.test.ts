@@ -128,9 +128,62 @@ describe("contact generator regressions", () => {
     ]);
   });
 
+  it("extracts class 301 Year 3 subjects instead of only PE rows", () => {
+    const demo = demoData();
+    const timetable = parseTimetableText(
+      [
+        "Math 3 HCL L 3 LZ / CCH / TSF Recess Physics 3 EL 3 Lunch JP 3 MG",
+        "JTYH B4-03,B4-04,B5-02 CL3 Yr3LPS_MT",
+        "CL 3 Z_CL TH/TL 3 Z_TL2 / Z_TL",
+        "CS 3 PE Recess EL 3 Lunch Physics 3 JP 3 MG",
+        "CCES Chem Oly 3LW Phys Oly 3 YW",
+        "CS Oly 3 LD Com 2 Robotics 3 YW",
+        "Music 3 PE Recess EL 3 Math 3 Lunch Bio 3 Chem 3",
+        "MS JTYH LKL DYSY Eng Lit 3 EV EL Bridge 3APC",
+        "Math 4 LCL Math 5 LCH",
+      ].join("\n"),
+      demo.session.id,
+      "301",
+    );
+    expect(timetable.map((row) => `${row.subject_raw}:${row.teacher_initials_normalised}`)).toEqual(
+      expect.arrayContaining([
+        "Math 3:JTYH",
+        "HCL L 3:LZ",
+        "CL3 Yr3:LPSMT",
+        "CL 3:ZCL",
+        "TH/TL 3:ZTL",
+        "CS 3:CCES",
+        "Chem Oly 3:LW",
+        "Phys Oly 3:YW",
+        "CS Oly 3:LD",
+        "Robotics 3:YW",
+        "Music 3:MS",
+        "Bio 3:LKL",
+        "Chem 3:DYSY",
+        "Eng Lit 3:EV",
+        "EL Bridge 3:APC",
+        "Math 4:LCL",
+        "Math 5:LCH",
+      ]),
+    );
+
+    const data = { ...demo, timetable, staff: [], matches: buildMatches(demo.session.id, timetable, []) };
+    const rows = previewRows(data);
+    expect(rows).toEqual(expect.arrayContaining([
+      { Subject: "Year 3 Math", Teacher: "Mr Teoh Yeow Hwee Joel", "Tel. No.": "6601 3237", "Email Add.": "nhstyhj@nus.edu.sg" },
+      { Subject: "Year 4 Math", Teacher: "Dr Lee Chan Lye", "Tel. No.": "6516 7302", "Email Add.": "nhslcl@nus.edu.sg" },
+      { Subject: "Year 5 Math", Teacher: "Mr Low Chin Han", "Tel. No.": "6516 7300", "Email Add.": "nhslch@nus.edu.sg" },
+      { Subject: "Year 3 Computer Science", Teacher: "Mr Chua Eng Siong Claude", "Tel. No.": "6516 5247", "Email Add.": "nhscesc@nus.edu.sg" },
+      { Subject: "Year 3 Music", Teacher: "Dr Sim Li Kern, Mark", "Tel. No.": "6516 4002", "Email Add.": "drmarksim@nus.edu.sg" },
+    ]));
+  });
+
   it("displays user-facing subject names from year-based timetable codes", () => {
     expect(subjectDisplay("Bio Oly 2VLSF")).toBe("Bio Oly 2");
     expect(subjectDisplay("Math 2")).toBe("Year 2 Math");
+    expect(subjectDisplay("Math 3")).toBe("Year 3 Math");
+    expect(subjectDisplay("Math 4")).toBe("Year 4 Math");
+    expect(subjectDisplay("Math 5")).toBe("Year 5 Math");
     expect(subjectDisplay("EL2")).toBe("Year 2 English");
     expect(subjectDisplay("Hum 1")).toBe("Year 1 Humanities");
     expect(subjectDisplay("Physics 3")).toBe("Year 3 Physics");
