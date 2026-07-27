@@ -181,6 +181,31 @@ describe("contact generator regressions", () => {
       { Subject: "Year 3 Computer Science", Teacher: "Mr Chua Eng Siong Claude", "Tel. No.": "6516 5247", "Email Add.": "nhscesc@nus.edu.sg" },
       { Subject: "Year 3 Music", Teacher: "Dr Sim Li Kern, Mark", "Tel. No.": "6516 4002", "Email Add.": "drmarksim@nus.edu.sg" },
     ]));
+    expect(rows).toEqual(expect.arrayContaining([
+      { Subject: "", Teacher: "Dr Seoh Kah Huat Robin", "Tel. No.": "6601 1315", "Email Add.": "nhsskh@nus.edu.sg" },
+    ]));
+  });
+
+  it("extracts DV RM 3 teachers from class 305 PDF text", () => {
+    const demo = demoData();
+    const timetable = parseTimetableText(
+      [
+        "WH Math 3 Recess Chem 3 HCL 3 LLZ / CCH Lunch CCE_Assembl D Y V XH R / N M YR 3 / TCYE / VWYL / CSY",
+        "JYHM B5-03 CL 3 B5-03,B5-04 y CSY Theatrette B4-02,B4-03,B4-04,B5-02",
+      ].join("\n"),
+      demo.session.id,
+      "305",
+    ).filter((row) => row.subject_raw === "DV RM 3");
+    expect(timetable.map((row) => row.teacher_initials_normalised)).toEqual(["YXH", "NYR", "TCYE", "VWYL", "CSY"]);
+
+    const data = { ...demo, timetable, staff: [], matches: buildMatches(demo.session.id, timetable, []) };
+    expect(previewRows(data)).toEqual([
+      { Subject: "Da Vinci Research Mentorship", Teacher: "Mr Yuen Xiang Hao", "Tel. No.": "6516 8534", "Email Add.": "nhsyxh@nus.edu.sg" },
+      { Subject: "", Teacher: "Mdm Ng Yu Rui", "Tel. No.": "6601 2041", "Email Add.": "nhsnyr@nus.edu.sg" },
+      { Subject: "", Teacher: "Mr Choo Yi En Theodore", "Tel. No.": "6516 5368", "Email Add.": "anhstcye@nus.edu.sg" },
+      { Subject: "", Teacher: "Ms Woo Yok Lin Verlyn", "Tel. No.": "6516 1772", "Email Add.": "nhswyl@nus.edu.sg" },
+      { Subject: "", Teacher: "Dr Chiam Sher-Yi", "Tel. No.": "6516 5159", "Email Add.": "nhscs@nus.edu.sg" },
+    ]);
   });
 
   it("displays user-facing subject names from year-based timetable codes", () => {

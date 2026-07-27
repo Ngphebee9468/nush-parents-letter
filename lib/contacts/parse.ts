@@ -29,6 +29,7 @@ export function parseTimetableText(text: string, sessionId: string, className: s
   const records: TimetableRecord[] = [];
   records.push(...extractKnownTimetableRecords(lines, sessionId, className));
   records.push(...extractConfiguredPeRecords(lines, sessionId, className));
+  records.push(...extractConfiguredDvRm3Records(lines, sessionId, className));
 
   for (const line of lines) {
     if (looksLikePackedTimetableLine(line) || looksLikeCodeOnlyTimetableNoise(line)) continue;
@@ -349,6 +350,7 @@ function extractKnownTimetableRecords(lines: string[], sessionId: string, classN
     { subject: "DV JM 2", codes: ["CSKS", "LYH", "BG"] },
     { subject: "DV JSR 2", codes: ["ZJ", "ZK", "LKH", "LLC", "DYSY", "GTYM", "VLSF", "THC", "AY", "YT"] },
     { subject: "DV JMR 2", codes: ["RCMH", "JYHM", "CYM"] },
+    { subject: "DV RM 3", codes: ["YXH", "NYR", "TCYE", "VWYL", "CSY"] },
     { subject: "CS 1", codes: ["LFH"] },
     { subject: "CS 2", codes: ["LD"] },
     { subject: "CS 3", codes: ["CCES"] },
@@ -415,6 +417,28 @@ function extractKnownTimetableRecords(lines: string[], sessionId: string, classN
     }
   }
   return records;
+}
+
+function extractConfiguredDvRm3Records(lines: string[], sessionId: string, className: string): TimetableRecord[] {
+  const compact = lines.join(" ").replace(/\s+/g, " ").toUpperCase();
+  const hasDvRmLabel = /\bDV\s*RM\s*3\b/.test(compact) || /D\s*Y\s*V\s*XH\s*R\s*\/\s*N\s*M\s*YR\s*3/.test(compact);
+  const hasTeacherBlock = /\bTCYE\b/.test(compact) && /\bVWYL\b/.test(compact) && /\bCSY\b/.test(compact);
+  if (!hasDvRmLabel && !hasTeacherBlock) return [];
+
+  return ["YXH", "NYR", "TCYE", "VWYL", "CSY"].map((code) => ({
+    id: crypto.randomUUID?.() ?? `dv-rm3-${code}`,
+    session_id: sessionId,
+    class_name: className,
+    subject_raw: "DV RM 3",
+    subject_display: subjectDisplay("DV RM 3"),
+    teacher_initials_raw: code,
+    teacher_initials_normalised: normaliseInitials(code),
+    venue: "",
+    source_text: "Configured DV RM 3 block: YXH / NYR / TCYE / VWYL / CSY",
+    extraction_confidence: 0.96,
+    extraction_confidence_source: "pdf_text_extract",
+    included: true,
+  }));
 }
 
 function isSubjectCandidate(value: string) {

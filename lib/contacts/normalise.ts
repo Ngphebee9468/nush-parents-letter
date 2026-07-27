@@ -80,6 +80,7 @@ export function subjectDisplay(subject: string) {
     "DV JM": "Da Vinci Junior Science Maker",
     "DV JSR": "Da Vinci Junior Science Research",
     "DV JMR": "Da Vinci Junior Math Research",
+    "DV RM 3": "Da Vinci Research Mentorship",
   };
   if (map[upper]) return map[upper];
 
@@ -105,6 +106,7 @@ export function subjectDisplay(subject: string) {
   if (/^DV\s*JM\s*\d?$/.test(upper)) return "Da Vinci Junior Science Maker";
   if (/^DV\s*JSR\s*\d?$/.test(upper)) return "Da Vinci Junior Science Research";
   if (/^DV\s*JMR\s*\d?$/.test(upper)) return "Da Vinci Junior Math Research";
+  if (/^DV\s*RM\s*\d?$/.test(upper)) return "Da Vinci Research Mentorship";
 
   return cleaned;
 }
